@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MessageCircle, Edit, Trash2, User, Calendar } from "lucide-react";
+import { MessageCircle, Edit, Trash2, User, Calendar, Clock } from "lucide-react";
 import { useCardOwnership } from "../hooks/useCardOwnership";
 import { deleteTeamRequest } from "../utils/db";
 import { toast } from "@/hooks/use-toast";
@@ -60,12 +60,19 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
     }
   };
 
-  const getDaysLeft = (expiresAt: string) => {
-    const expiry = new Date(expiresAt);
-    const now = new Date();
-    const diffTime = expiry.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+  const getDaysLeft = (expiresAt: string | undefined) => {
+    if (!expiresAt) return null;
+    
+    try {
+      const expiry = new Date(expiresAt);
+      const now = new Date();
+      const diffTime = expiry.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : 0;
+    } catch (error) {
+      console.error("Invalid expiry date:", expiresAt);
+      return null;
+    }
   };
 
   return (
@@ -96,10 +103,12 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                   </div>
                 </div>
                 
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4 mr-1" />
-                  {getDaysLeft(team.expiresAt)} days left
-                </div>
+                {team.expiresAt && getDaysLeft(team.expiresAt) !== null && (
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4 mr-1" />
+                    {getDaysLeft(team.expiresAt)} days left
+                  </div>
+                )}
               </div>
               
               <p className="text-muted-foreground mt-2 text-sm leading-relaxed">

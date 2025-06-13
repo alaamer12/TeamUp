@@ -14,8 +14,15 @@ export function installGlobalErrorHandler(suppressConsoleErrors = false) {
     const isScriptError = event.target && 
       (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK');
     
+    // Check if this is the specific addEventListener error from background.js
+    const isAddEventListenerError = 
+      event.message && 
+      event.message.includes('Cannot read properties of null') && 
+      event.message.includes('addEventListener');
+    
     // Check if this is likely from a browser extension
     const isLikelyExtensionError = 
+      isAddEventListenerError ||
       (event.filename && (
         event.filename.includes('chrome-extension://') || 
         event.filename.includes('moz-extension://') ||

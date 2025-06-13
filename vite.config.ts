@@ -7,7 +7,12 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
+  },
+  define: {
+    // Set React Router future flags to resolve warnings
+    'process.env.ROUTER_FUTURE_v7_relativeSplatPath': 'true',
+    'process.env.ROUTER_FUTURE_v7_startTransition': 'true',
   },
   plugins: [
     react(),

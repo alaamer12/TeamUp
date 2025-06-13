@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { installAllErrorHandlers } from './utils/error-handlers'
+import './router-config.js'
 
 // Install global error handlers to catch and suppress extension errors
 installAllErrorHandlers(true);

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,42 @@ import { Users, Plus, Trash2, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import { saveTeamRequest } from "../utils/db";
-import { getCurrentOwnership } from "../utils/fingerprint";
+// Import with fallback mechanism
+let getCurrentOwnership;
+try {
+  // Try to import the original fingerprint module
+  import("../utils/fingerprint").then(module => {
+    getCurrentOwnership = module.getCurrentOwnership;
+  }).catch(() => {
+    // If that fails, use a simple fallback fingerprint generator
+    getCurrentOwnership = () => {
+      let fingerprint = localStorage.getItem('user-fingerprint');
+      if (!fingerprint) {
+        fingerprint = [
+          Date.now(),
+          Math.random().toString(36).substring(2),
+          navigator.userAgent?.substring(0, 20) || 'unknown'
+        ].join('-');
+        localStorage.setItem('user-fingerprint', fingerprint);
+      }
+      return fingerprint;
+    };
+  });
+} catch (error) {
+  // Synchronous fallback in case of immediate error
+  getCurrentOwnership = () => {
+    let fingerprint = localStorage.getItem('user-fingerprint');
+    if (!fingerprint) {
+      fingerprint = [
+        Date.now(),
+        Math.random().toString(36).substring(2),
+        navigator.userAgent?.substring(0, 20) || 'unknown'
+      ].join('-');
+      localStorage.setItem('user-fingerprint', fingerprint);
+    }
+    return fingerprint;
+  };
+}
 
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
@@ -119,9 +153,25 @@ const Landing = () => {
     setIsSubmitting(true);
     
     try {
+      // Get ownership with fallback in case getCurrentOwnership is not yet available
+      let ownerFingerprint;
+      if (typeof getCurrentOwnership === 'function') {
+        ownerFingerprint = getCurrentOwnership();
+      } else {
+        // Fallback if getCurrentOwnership is not available
+        const fallbackFingerprint = localStorage.getItem('user-fingerprint') || 
+          [Date.now(), Math.random().toString(36).substring(2)].join('-');
+        
+        if (!localStorage.getItem('user-fingerprint')) {
+          localStorage.setItem('user-fingerprint', fallbackFingerprint);
+        }
+        
+        ownerFingerprint = fallbackFingerprint;
+      }
+      
       const teamData = {
         ...formData,
-        ownerFingerprint: getCurrentOwnership()
+        ownerFingerprint
       };
       
       await saveTeamRequest(teamData);

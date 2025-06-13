@@ -1,0 +1,6 @@
+@echo off
+echo Installing server dependencies...
+cd /d %~dp0
+npm install
+echo Starting server...
+npm start 

@@ -1,71 +1,125 @@
+import { fetchTeamRequests, createTeamRequest, updateTeamRequest as apiUpdateTeamRequest, deleteTeamRequest as apiDeleteTeamRequest } from './api-client';
 
-import { get, set, del, keys } from 'idb-keyval';
+// Cache for team requests to reduce API calls
+let teamRequestsCache = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 60 * 1000; // 1 minute cache TTL
 
-const EXPIRY_DAYS = 90;
-
+/**
+ * Save a new team request to the server
+ * @param {Object} teamData - Team request data
+ * @returns {Promise<string>} - ID of the created team request
+ */
 export async function saveTeamRequest(teamData) {
-  const id = Date.now().toString();
-  const expiryDate = new Date();
-  expiryDate.setDate(expiryDate.getDate() + EXPIRY_DAYS);
-  
-  const teamWithMeta = {
-    ...teamData,
-    id,
-    createdAt: new Date().toISOString(),
-    expiresAt: expiryDate.toISOString(),
-    ownerFingerprint: teamData.ownerFingerprint
-  };
-  
-  await set(`team-${id}`, teamWithMeta);
-  notifyListingsUpdate();
-  return id;
-}
-
-export async function getTeamRequests() {
-  const allKeys = await keys();
-  const teamKeys = allKeys.filter(key => key.toString().startsWith('team-'));
-  
-  const teams = [];
-  const now = new Date();
-  
-  for (const key of teamKeys) {
-    const team = await get(key);
-    if (team) {
-      const expiryDate = new Date(team.expiresAt);
-      if (expiryDate > now) {
-        teams.push(team);
-      } else {
-        // Auto-delete expired teams
-        await del(key);
-      }
-    }
-  }
-  
-  return teams.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
-
-export async function deleteTeamRequest(id) {
-  await del(`team-${id}`);
-  notifyListingsUpdate();
-}
-
-export async function updateTeamRequest(id, updatedData) {
-  const existing = await get(`team-${id}`);
-  if (existing) {
-    const updated = { ...existing, ...updatedData };
-    await set(`team-${id}`, updated);
+  try {
+    const response = await createTeamRequest(teamData);
     notifyListingsUpdate();
+    invalidateCache();
+    return response.id;
+  } catch (error) {
+    console.error('Failed to save team request:', error);
+    throw error;
   }
+}
+
+/**
+ * Get all team requests from the server
+ * @param {boolean} forceRefresh - Whether to bypass the cache
+ * @returns {Promise<Array>} - Array of team requests
+ */
+export async function getTeamRequests(forceRefresh = false) {
+  const now = Date.now();
+  
+  // Use cache if available and not expired
+  if (!forceRefresh && teamRequestsCache && (now - lastFetchTime < CACHE_TTL)) {
+    return teamRequestsCache;
+  }
+  
+  try {
+    const teams = await fetchTeamRequests();
+    
+    // Update cache
+    teamRequestsCache = teams;
+    lastFetchTime = now;
+    
+    return teams;
+  } catch (error) {
+    console.error('Failed to fetch team requests:', error);
+    // If we have a cache, return it even if expired
+    if (teamRequestsCache) {
+      return teamRequestsCache;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Delete a team request
+ * @param {string} id - Team request ID
+ * @param {string} ownerFingerprint - Owner's fingerprint for verification
+ * @returns {Promise<void>}
+ */
+export async function deleteTeamRequest(id, ownerFingerprint) {
+  try {
+    await apiDeleteTeamRequest(id, ownerFingerprint);
+    notifyListingsUpdate();
+    invalidateCache();
+  } catch (error) {
+    console.error('Failed to delete team request:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update a team request
+ * @param {string} id - Team request ID
+ * @param {Object} updatedData - Updated team data
+ * @returns {Promise<Object>} - Updated team request
+ */
+export async function updateTeamRequest(id, updatedData) {
+  try {
+    const response = await apiUpdateTeamRequest(id, updatedData);
+    notifyListingsUpdate();
+    invalidateCache();
+    return response;
+  } catch (error) {
+    console.error('Failed to update team request:', error);
+    throw error;
+  }
+}
+
+/**
+ * Invalidate the cache to force a refresh on next fetch
+ */
+function invalidateCache() {
+  teamRequestsCache = null;
+  lastFetchTime = 0;
 }
 
 // BroadcastChannel for cross-tab sync
 const channel = new BroadcastChannel('team-listings-sync');
 
+/**
+ * Notify other tabs that listings have been updated
+ */
 function notifyListingsUpdate() {
   channel.postMessage({ type: 'LISTINGS_UPDATED' });
 }
 
+/**
+ * Subscribe to listings updates from other tabs
+ * @param {Function} callback - Callback function to be called when listings are updated
+ * @returns {Function} - Unsubscribe function
+ */
 export function subscribeToListingsUpdates(callback) {
-  channel.addEventListener('message', callback);
-  return () => channel.removeEventListener('message', callback);
+  const handleMessage = (event) => {
+    if (event.data?.type === 'LISTINGS_UPDATED') {
+      // Invalidate cache when we receive an update
+      invalidateCache();
+      callback(event);
+    }
+  };
+  
+  channel.addEventListener('message', handleMessage);
+  return () => channel.removeEventListener('message', handleMessage);
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MessageCircle, Edit, Trash2, User, Calendar, Clock } from "lucide-react";
+import { MessageCircle, Edit, Trash2, User, Calendar } from "lucide-react";
 import { useCardOwnership } from "../hooks/useCardOwnership";
 import { deleteTeamRequest } from "../utils/db";
 import { toast } from "@/hooks/use-toast";
@@ -17,12 +16,12 @@ interface TeamCardProps {
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
-  const { isOwner } = useCardOwnership(team);
+  const { isOwner, currentFingerprint } = useCardOwnership(team);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleDelete = async () => {
     try {
-      await deleteTeamRequest(team.id);
+      await deleteTeamRequest(team.id, currentFingerprint);
       toast({
         title: "Team request deleted",
         description: "Your team request has been removed successfully."
@@ -52,7 +51,13 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    if (!dateString) return "Unknown date";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error("Invalid date format:", dateString);
+      return "Invalid date";
+    }
   };
 
   const getDaysLeft = (expiresAt: string) => {
@@ -143,7 +148,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                     Major: <span className="font-medium">{member.major}</span>
                   </div>
                   
-                  {member.planguage.length > 0 && (
+                  {member.planguage?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {member.planguage.map((lang: string) => (
                         <Badge key={lang} variant="outline" className="text-xs">

@@ -1,12 +1,19 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Users } from "lucide-react";
+import { Moon, Sun, Users, Languages } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { motion } from "framer-motion";
+import { useLanguage } from "./LanguageProvider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -38,7 +45,7 @@ const Navbar = () => {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
-                Home
+                {t('navbar.home')}
               </Link>
               <Link 
                 to="/listings" 
@@ -48,7 +55,7 @@ const Navbar = () => {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
-                Listings
+                {t('navbar.listings')}
               </Link>
               <Link 
                 to="/about" 
@@ -58,22 +65,50 @@ const Navbar = () => {
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
-                About
+                {t('navbar.about')}
               </Link>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="w-9 h-9 rounded-full"
-            >
-              {theme === "light" ? (
-                <Moon className="h-4 w-4" />
-              ) : (
-                <Sun className="h-4 w-4" />
-              )}
-            </Button>
+            <div className="flex items-center space-x-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-9 h-9 rounded-full"
+                  >
+                    <Languages className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage("ar")}
+                    className={language === "ar" ? "bg-muted" : ""}
+                  >
+                    العربية
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setLanguage("en")}
+                    className={language === "en" ? "bg-muted" : ""}
+                  >
+                    English
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                className="w-9 h-9 rounded-full"
+              >
+                {theme === "light" ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

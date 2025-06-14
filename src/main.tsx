@@ -3,6 +3,7 @@ import App from './App.tsx'
 import './index.css'
 import { installAllErrorHandlers } from './utils/error-handlers'
 import './router-config.js'
+import { LanguageProvider } from './components/LanguageProvider'
 
 // Install global error handlers to catch and suppress extension errors
 installAllErrorHandlers(true);
@@ -11,7 +12,11 @@ installAllErrorHandlers(true);
 const rootElement = document.getElementById("root");
 if (rootElement) {
   try {
-    createRoot(rootElement).render(<App />);
+    createRoot(rootElement).render(
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
+    );
   } catch (error) {
     console.error('Failed to render React application:', error);
     // Fallback content if React fails to render

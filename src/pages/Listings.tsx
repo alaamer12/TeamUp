@@ -10,10 +10,12 @@ import TeamCard from "../components/TeamCard";
 import { getTeamRequests, subscribeToListingsUpdates } from "../utils/db";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useLanguage } from "../components/LanguageProvider";
 
 const ITEMS_PER_PAGE = 6;
 
 const Listings = () => {
+  const { t } = useLanguage();
   const [teams, setTeams] = useState<any[]>([]);
   const [filteredTeams, setFilteredTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,9 +111,9 @@ const Listings = () => {
         {isOffline && (
           <Alert className="mx-4 mt-4 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
             <WifiOff className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-            <AlertTitle>Offline Mode</AlertTitle>
+            <AlertTitle>{t('listings.offline_title')}</AlertTitle>
             <AlertDescription>
-              You're currently in offline mode. Changes will be saved locally and synced when you reconnect.
+              {t('listings.offline_description')}
             </AlertDescription>
           </Alert>
         )}
@@ -124,9 +126,9 @@ const Listings = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
             >
-              <h1 className="text-4xl font-bold mb-4">Team Requests</h1>
+              <h1 className="text-4xl font-bold mb-4">{t('listings.title')}</h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Browse and join amazing teams looking for talented members
+                {t('listings.subtitle')}
               </p>
               
               <Tooltip>
@@ -134,12 +136,12 @@ const Listings = () => {
                   <Link to="/">
                     <Button className="gradient-button">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Team Request
+                      {t('listings.create_button')}
                     </Button>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Create your own team request to find collaborators</p>
+                  <p>{t('listings.create_tooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </motion.div>
@@ -156,14 +158,14 @@ const Listings = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Input
-                        placeholder="Search teams, skills, languages..."
+                        placeholder={t('listings.search')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
                       />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Search by skills, languages, or team descriptions</p>
+                      <p>{t('listings.search_tooltip')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -176,10 +178,10 @@ const Listings = () => {
                     <TooltipTrigger asChild>
                       <Select value={filterMajor} onValueChange={setFilterMajor}>
                         <SelectTrigger className="w-48">
-                          <SelectValue placeholder="Filter by major" />
+                          <SelectValue placeholder={t('listings.filter_major')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Majors</SelectItem>
+                          <SelectItem value="all">{t('listings.all_majors')}</SelectItem>
                           {majors.map((major) => (
                             <SelectItem key={major} value={major}>{major}</SelectItem>
                           ))}
@@ -187,7 +189,7 @@ const Listings = () => {
                       </Select>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Filter teams by academic major (CS: Computer Science, IS: Information Systems, SC: Scientific Computing, AI: Artificial Intelligence)</p>
+                      <p>{t('listings.filter_tooltip')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -195,11 +197,11 @@ const Listings = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="text-sm text-muted-foreground">
-                      {filteredTeams.length} team{filteredTeams.length !== 1 ? 's' : ''}
+                      {filteredTeams.length} {filteredTeams.length !== 1 ? t('listings.teams_count') : t('listings.teams_count_singular')}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Number of teams matching your current filters</p>
+                    <p>{t('listings.teams_count_tooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -225,17 +227,17 @@ const Listings = () => {
                 className="text-center py-20"
               >
                 <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-2xl font-semibold mb-2">No teams found</h3>
+                <h3 className="text-2xl font-semibold mb-2">{t('listings.no_teams_title')}</h3>
                 <p className="text-muted-foreground mb-6">
                   {searchTerm || filterMajor !== "all" 
-                    ? "Try adjusting your search or filters" 
-                    : "Be the first to create a team request!"
+                    ? t('listings.no_teams_filters') 
+                    : t('listings.no_teams_empty')
                   }
                 </p>
                 <Link to="/">
                   <Button className="gradient-button">
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Team Request
+                    {t('listings.create_button')}
                   </Button>
                 </Link>
               </motion.div>
@@ -247,7 +249,7 @@ const Listings = () => {
                       key={team.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.1, duration: 0.6 }}
                     >
                       <TeamCard team={team} onUpdate={loadTeams} />
                     </motion.div>
@@ -265,11 +267,11 @@ const Listings = () => {
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
                           >
-                            Previous
+                            {t('listings.previous')}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Go to previous page</p>
+                          <p>{t('listings.previous_tooltip')}</p>
                         </TooltipContent>
                       </Tooltip>
                       
@@ -285,7 +287,7 @@ const Listings = () => {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Go to page {i + 1}</p>
+                            <p>{t('listings.page_tooltip')} {i + 1}</p>
                           </TooltipContent>
                         </Tooltip>
                       ))}
@@ -297,11 +299,11 @@ const Listings = () => {
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
                           >
-                            Next
+                            {t('listings.next')}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Go to next page</p>
+                          <p>{t('listings.next_tooltip')}</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>

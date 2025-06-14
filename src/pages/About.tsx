@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Users, Target, Zap, Shield, Code, Database, Smartphone, Palette } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { useLanguage } from "../components/LanguageProvider";
 
 const About = () => {
+  const { t } = useLanguage();
+  
   const features = [
     {
       icon: Users,
@@ -57,9 +59,9 @@ const About = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('about.how_works')}</h2>
             <p className="text-lg text-muted-foreground">
-              Simple steps to find your perfect team
+              {t('about.how_works_subtitle')}
             </p>
           </motion.div>
 
@@ -68,18 +70,18 @@ const About = () => {
               {[
                 {
                   step: "1",
-                  title: "Create Your Profile",
-                  description: "Tell us about yourself, your skills, and what you bring to a team."
+                  title: t('about.step1_title'),
+                  description: t('about.step1_description')
                 },
                 {
                   step: "2", 
-                  title: "Define Team Requirements",
-                  description: "Specify exactly what skills, expertise, and qualities you're looking for in teammates."
+                  title: t('about.step2_title'),
+                  description: t('about.step2_description')
                 },
                 {
                   step: "3",
-                  title: "Browse & Connect",
-                  description: "Browse team requests, find matches, and connect via WhatsApp to start collaborating."
+                  title: t('about.step3_title'),
+                  description: t('about.step3_description')
                 }
               ].map((item, index) => (
                 <motion.div
@@ -114,9 +116,9 @@ const About = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold mb-4">Built With Modern Tech</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('about.tech_stack')}</h2>
             <p className="text-lg text-muted-foreground">
-              A robust, performant stack focused on user experience and privacy
+              {t('about.tech_stack_subtitle')}
             </p>
           </motion.div>
 
@@ -131,7 +133,7 @@ const About = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Code className="w-5 h-5 mr-2" />
-                  Technology Stack
+                  {t('about.tech_stack_title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -174,35 +176,35 @@ const About = () => {
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-3xl">Privacy First</CardTitle>
+                <CardTitle className="text-3xl">{t('about.privacy_title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-lg text-muted-foreground">
-                  Your privacy matters. TeamUp is built with a privacy-first approach:
+                  {t('about.privacy_description')}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                   <div>
-                    <h4 className="font-semibold mb-2">Local Storage Only</h4>
+                    <h4 className="font-semibold mb-2">{t('about.local_storage_title')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      All your data stays on your device using IndexedDB. No servers, no data collection.
+                      {t('about.local_storage_description')}
                     </p>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2">Ownership Protection</h4>
+                    <h4 className="font-semibold mb-2">{t('about.ownership_title')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Browser fingerprinting ensures only you can modify your team requests.
+                      {t('about.ownership_description')}
                     </p>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2">Auto Expiry</h4>
+                    <h4 className="font-semibold mb-2">{t('about.expiry_title')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Team requests automatically expire after 90 days to keep listings fresh.
+                      {t('about.expiry_description')}
                     </p>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2">Direct Communication</h4>
+                    <h4 className="font-semibold mb-2">{t('about.direct_comm_title')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Connect directly via WhatsApp - no intermediary platforms or message tracking.
+                      {t('about.direct_comm_description')}
                     </p>
                   </div>
                 </div>

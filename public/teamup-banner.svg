@@ -1,0 +1,42 @@
+<svg width="800" height="200" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="200" rx="10" fill="url(#bg-gradient)" />
+  
+  <!-- TeamUp Logo -->
+  <g transform="translate(50, 100)">
+    <!-- Team -->
+    <text font-family="Inter, sans-serif" font-size="60" font-weight="700" fill="white">
+      Team<tspan fill="#f9fafb">Up</tspan>
+    </text>
+    
+    <!-- Tagline -->
+    <text x="0" y="40" font-family="Inter, sans-serif" font-size="20" font-weight="400" fill="#f9fafb">
+      Build Amazing Teams
+    </text>
+  </g>
+  
+  <!-- Decorative elements -->
+  <g fill="white" opacity="0.1">
+    <circle cx="650" cy="50" r="30" />
+    <circle cx="700" cy="90" r="20" />
+    <circle cx="670" cy="130" r="15" />
+    <circle cx="720" cy="150" r="10" />
+  </g>
+  
+  <!-- Connection lines representing team connections -->
+  <g stroke="white" stroke-width="2" opacity="0.3">
+    <line x1="650" y1="50" x2="700" y2="90" />
+    <line x1="700" y1="90" x2="670" y2="130" />
+    <line x1="670" y1="130" x2="720" y2="150" />
+    <line x1="650" y1="50" x2="670" y2="130" />
+    <line x1="650" y1="50" x2="720" y2="150" />
+  </g>
+</svg> 

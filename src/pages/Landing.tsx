@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Trash2, ArrowRight, Sparkles } from "lucide-react";
+import { Users, Plus, Trash2, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import { saveTeamRequest } from "../utils/db";
@@ -18,19 +18,16 @@ import { getCurrentOwnership } from "../utils/fingerprint-safe";
 
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
-  "Data Science", "Machine Learning", "DevOps", "UI/UX Design", "Product Management",
-  "Quality Assurance", "Cybersecurity", "Blockchain", "Game Development"
+  "Data Science", "AI [ML, DL, CV, NLP]", "DevOps", "UI/UX",
 ];
 
 const majors = [
-  "Computer Science", "Software Engineering", "Information Technology", 
-  "Data Science", "Computer Engineering", "Electrical Engineering", 
-  "Mathematics", "Physics", "Business", "Design", "Other"
+  "CS", "IS", "SC", "AI"
 ];
 
 const programmingLanguages = [
-  "JavaScript", "Python", "Java", "C++", "C#", "Go", "Rust", "PHP", 
-  "Swift", "Kotlin", "TypeScript", "Ruby", "SQL", "HTML/CSS"
+  "JavaScript", "Python", "Java", "C++", "C# [.NET]", "Rust", "PHP",
+  "TypeScript", "Flutter", "React Native", "React", "Angular", "Vue", "Other"
 ];
 
 const Landing = () => {
@@ -174,18 +171,12 @@ const Landing = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center space-x-2 bg-primary/10 px-4 py-2 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Find Your Perfect Team</span>
-            </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Build Amazing Teams
+            <h1 className="text-4xl md:text-6xl font-bold mb-8 pb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Build Graduation <br />
+              Project Teams
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Connect with talented developers, designers, and innovators. Create your dream team for hackathons, projects, and startups.
-            </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -243,7 +234,7 @@ const Landing = () => {
                         <Input
                           id="phone"
                           type="tel"
-                          placeholder="+1 234 567 8900"
+                          placeholder="01155555555"
                           value={formData.user_personal_phone}
                           onChange={(e) => handleInputChange("user_personal_phone", e.target.value)}
                           required
@@ -383,7 +374,7 @@ const Landing = () => {
                         </div>
 
                         <div>
-                          <Label>Programming Languages (Optional)</Label>
+                          <Label>Programming Languages/Frameworks (Optional)</Label>
                           <div className="mt-2 flex flex-wrap gap-2">
                             {programmingLanguages.map((lang) => (
                               <Badge
@@ -403,13 +394,6 @@ const Landing = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={member.already_know}
-                            onCheckedChange={(checked) => handleMemberChange(index, "already_know", checked)}
-                          />
-                          <Label>I already know this person</Label>
-                        </div>
                       </motion.div>
                     ))}
                   </div>

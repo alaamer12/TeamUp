@@ -1,5 +1,5 @@
 import { get, set, del } from 'idb-keyval';
-import { createTeamRequest, fetchTeamRequests, deleteTeamRequest as apiDeleteTeamRequest } from './api-client';
+import { createTeamRequest, fetchTeamRequests, deleteTeamRequest as apiDeleteTeamRequest, updateTeamRequest as apiUpdateTeamRequest } from './api-client';
 import { v4 as uuidv4 } from 'uuid';
 
 // Key for storing team requests in IndexedDB
@@ -15,7 +15,12 @@ let isOfflineMode = false;
  */
 export async function saveTeamRequest(teamData) {
   try {
-    // Try to save to backend first
+    // If it has an ID, it's an update
+    if (teamData.id) {
+      return await updateTeamRequest(teamData);
+    }
+    
+    // Otherwise it's a new request
     const savedRequest = await createTeamRequest(teamData);
     notifyListingsUpdated();
     return savedRequest;
@@ -25,11 +30,11 @@ export async function saveTeamRequest(teamData) {
     // Fallback to local storage if backend fails
     isOfflineMode = true;
     
-    // Generate an ID and add timestamp
+    // Generate an ID and add timestamp if it's a new request
     const newRequest = {
       ...teamData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString()
+      id: teamData.id || uuidv4(),
+      createdAt: teamData.createdAt || new Date().toISOString()
     };
     
     // Get existing requests
@@ -41,8 +46,22 @@ export async function saveTeamRequest(teamData) {
       requests = [];
     }
     
-    // Add new request
-    requests.push(newRequest);
+    // If it has an ID, update existing request
+    if (teamData.id) {
+      const index = requests.findIndex(r => r.id === teamData.id);
+      if (index !== -1) {
+        requests[index] = {
+          ...newRequest,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        // If not found, add as new
+        requests.push(newRequest);
+      }
+    } else {
+      // Add new request
+      requests.push(newRequest);
+    }
     
     // Save back to IndexedDB
     await set(TEAM_REQUESTS_KEY, requests);
@@ -52,6 +71,63 @@ export async function saveTeamRequest(teamData) {
     notifyListingsUpdated();
     
     return newRequest;
+  }
+}
+
+/**
+ * Update a team request
+ * @param {Object} teamData - Team request data with ID
+ * @returns {Promise<Object>} Updated team request
+ */
+export async function updateTeamRequest(teamData) {
+  if (!teamData.id) {
+    throw new Error('Team request ID is required for updates');
+  }
+  
+  try {
+    // Try to update on the backend first
+    const updatedRequest = await apiUpdateTeamRequest(teamData.id, teamData);
+    notifyListingsUpdated();
+    return updatedRequest;
+  } catch (error) {
+    console.error('Failed to update team request:', error);
+    
+    // Fallback to local storage
+    isOfflineMode = true;
+    
+    // Get existing requests
+    let requests = [];
+    try {
+      requests = await get(TEAM_REQUESTS_KEY) || [];
+    } catch (e) {
+      requests = [];
+    }
+    
+    // Find and update the request
+    const index = requests.findIndex(r => r.id === teamData.id);
+    
+    if (index === -1) {
+      throw new Error('Team request not found');
+    }
+    
+    // Check ownership
+    if (requests[index].ownerFingerprint !== teamData.ownerFingerprint) {
+      throw new Error('Not authorized to update this request');
+    }
+    
+    // Update the request
+    const updatedRequest = {
+      ...teamData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    requests[index] = updatedRequest;
+    
+    // Save back to IndexedDB
+    await set(TEAM_REQUESTS_KEY, requests);
+    notifyListingsUpdated();
+    
+    return updatedRequest;
   }
 }
 

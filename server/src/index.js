@@ -102,6 +102,42 @@ app.delete('/api/requests/:id', (req, res) => {
   }
 });
 
+app.put('/api/requests/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+    let requests = readRequests();
+    
+    const requestIndex = requests.findIndex(request => request.id === id);
+    
+    if (requestIndex === -1) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+    
+    // Check ownership
+    if (requests[requestIndex].ownerFingerprint !== updatedData.ownerFingerprint) {
+      return res.status(403).json({ error: 'Not authorized to update this request' });
+    }
+    
+    // Update the request while preserving id, createdAt and ownerFingerprint
+    const updatedRequest = {
+      ...updatedData,
+      id: requests[requestIndex].id,
+      createdAt: requests[requestIndex].createdAt,
+      ownerFingerprint: requests[requestIndex].ownerFingerprint,
+      updatedAt: new Date().toISOString()
+    };
+    
+    requests[requestIndex] = updatedRequest;
+    writeRequests(requests);
+    
+    res.json(updatedRequest);
+  } catch (error) {
+    console.error('Error updating request:', error);
+    res.status(500).json({ error: 'Failed to update request' });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

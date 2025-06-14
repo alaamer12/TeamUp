@@ -5,20 +5,43 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MessageCircle, Edit, Trash2, User, Calendar, Clock, HelpCircle } from "lucide-react";
 import { useCardOwnership } from "../hooks/useCardOwnership";
 import { deleteTeamRequest } from "../utils/db";
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 
 interface TeamCardProps {
   team: any;
   onUpdate: () => void;
 }
 
+const techFields = [
+  "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
+  "Data Science", "AI [ML, DL, CV, NLP]", "DevOps", "UI/UX",
+];
+
+const majors = [
+  "CS", "IS", "SC", "AI"
+];
+
+const programmingLanguages = [
+  "JavaScript", "Python", "Java", "C++", "C# [.NET]", "Rust", "PHP",
+  "TypeScript", "Flutter", "React Native", "React", "Angular", "Vue", "Other"
+];
+
 const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
+  const navigate = useNavigate();
   const { isOwner, currentFingerprint } = useCardOwnership(team);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({ ...team });
 
   const handleDelete = async () => {
     try {
@@ -36,6 +59,12 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleEdit = () => {
+    // For simplicity, we'll redirect to the landing page with the team data
+    // In a real app, you might want to implement a proper edit form here
+    navigate('/', { state: { editMode: true, teamData: team } });
   };
 
   const handleWhatsAppContact = () => {
@@ -253,7 +282,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                 <div className="flex space-x-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={handleEdit}>
                         <Edit className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>

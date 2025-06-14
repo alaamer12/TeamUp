@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff } from "lucide-react";
+import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import { saveTeamRequest } from "../utils/db";
@@ -34,23 +34,37 @@ const programmingLanguages = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   
-  const [formData, setFormData] = useState({
-    user_personal_phone: "",
-    user_name: "",
-    user_gender: "",
-    user_abstract: "",
-    members: [
-      {
-        tech_field: [],
-        gender: "Any",
-        major: "",
-        planguage: [],
-        already_know: false
-      }
-    ]
+  // Initialize form data, checking if we're in edit mode
+  const [formData, setFormData] = useState(() => {
+    // Check if we have team data from navigation state (edit mode)
+    const editData = location.state?.editMode && location.state?.teamData;
+    
+    if (editData) {
+      setIsEditMode(true);
+      return editData;
+    }
+    
+    // Default initial state
+    return {
+      user_personal_phone: "",
+      user_name: "",
+      user_gender: "",
+      user_abstract: "",
+      members: [
+        {
+          tech_field: [],
+          gender: "Any",
+          major: "",
+          planguage: [],
+          already_know: false
+        }
+      ]
+    };
   });
 
   // Check online status
@@ -136,34 +150,36 @@ const Landing = () => {
     setIsSubmitting(true);
     
     try {
-      const ownerFingerprint = getCurrentOwnership();
-      
-      const teamData = {
-        ...formData,
-        ownerFingerprint
-      };
+      // In edit mode, we want to preserve the original ID and ownership
+      const teamData = isEditMode 
+        ? { ...formData } // Keep existing ID and ownership
+        : { ...formData, ownerFingerprint: getCurrentOwnership() };
       
       await saveTeamRequest(teamData);
       
       toast({
-        title: "Team Request Created!",
-        description: "Your team request has been saved successfully.",
+        title: isEditMode ? "Team Request Updated!" : "Team Request Created!",
+        description: isEditMode 
+          ? "Your team request has been updated successfully."
+          : "Your team request has been saved successfully.",
       });
 
-      // Reset form
-      setFormData({
-        user_personal_phone: "",
-        user_name: "",
-        user_gender: "",
-        user_abstract: "",
-        members: [{
-          tech_field: [],
-          gender: "Any", 
-          major: "",
-          planguage: [],
-          already_know: false
-        }]
-      });
+      // Reset form if not in edit mode
+      if (!isEditMode) {
+        setFormData({
+          user_personal_phone: "",
+          user_name: "",
+          user_gender: "",
+          user_abstract: "",
+          members: [{
+            tech_field: [],
+            gender: "Any", 
+            major: "",
+            planguage: [],
+            already_know: false
+          }]
+        });
+      }
 
       // Navigate to listings
       setTimeout(() => navigate("/listings"), 1000);
@@ -171,7 +187,7 @@ const Landing = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save team request. Please try again.",
+        description: `Failed to ${isEditMode ? 'update' : 'save'} team request. Please try again.`,
         variant: "destructive"
       });
     } finally {
@@ -260,9 +276,13 @@ const Landing = () => {
             >
               <Card className="shadow-xl">
                 <CardHeader className="text-center">
-                  <CardTitle className="text-3xl font-bold">Create Team Request</CardTitle>
+                  <CardTitle className="text-3xl font-bold">
+                    {isEditMode ? "Edit Team Request" : "Create Team Request"}
+                  </CardTitle>
                   <CardDescription className="text-lg">
-                    Tell us about yourself and the teammates you're looking for
+                    {isEditMode 
+                      ? "Update your team request details" 
+                      : "Tell us about yourself and the teammates you're looking for"}
                   </CardDescription>
                 </CardHeader>
                 
@@ -549,20 +569,31 @@ const Landing = () => {
                       ))}
                     </div>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          type="submit" 
-                          className="w-full gradient-button text-lg py-3" 
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? "Creating..." : "Create Team Request"}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Submit your team request to find collaborators</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <CardFooter className="flex justify-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            disabled={isSubmitting}
+                            type="submit"
+                            className="w-full gradient-button text-lg py-3"
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                {isEditMode ? "Updating..." : "Creating..."}
+                              </>
+                            ) : (
+                              <>
+                                {isEditMode ? "Update Team Request" : "Create Team Request"}
+                              </>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{isEditMode ? "Update your team request" : "Submit your team request to find collaborators"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </CardFooter>
                   </form>
                 </CardContent>
               </Card>

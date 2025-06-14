@@ -1,22 +1,32 @@
 [
   {
-    "id": "f3dabd2b-772b-4f44-9485-49dadf749aee",
-    "user_personal_phone": "363-321-6386",
-    "user_name": "Tina Kuhn",
-    "user_gender": "Female",
-    "user_abstract": "990 Maurice Ville",
+    "id": "555d5383-6aa2-48e9-b352-7c16bffb741c",
+    "user_personal_phone": "748-772-9303",
+    "user_name": "Ima Metz",
+    "user_gender": "Male",
+    "user_abstract": "3484 Kaycee Key",
     "members": [
+      {
+        "tech_field": [
+          "Mobile Development"
+        ],
+        "gender": "Any",
+        "major": "SC",
+        "planguage": [],
+        "already_know": false
+      },
       {
         "tech_field": [
           "Full Stack"
         ],
         "gender": "Male",
-        "major": "AI",
+        "major": "IS",
         "planguage": [],
         "already_know": false
       }
     ],
     "ownerFingerprint": "1749858189151-ourug2q1jr-Mozilla/5.0 (Windows",
-    "createdAt": "2025-06-14T00:42:46.752Z"
+    "createdAt": "2025-06-14T00:45:37.363Z",
+    "updatedAt": "2025-06-14T00:54:17.472Z"
   }
 ]

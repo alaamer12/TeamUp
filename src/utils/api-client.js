@@ -2,35 +2,28 @@
  * API client for communicating with the backend server
  */
 
-// Try port 8080 first, then fall back to 3000 if needed
-const API_URLS = [
-  'http://localhost:8080/api',
-  'http://localhost:3000/api'
-];
+// Get API URL from environment variables or use fallbacks
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 /**
- * Attempt to fetch from multiple API URLs
+ * Fetch from the API with proper error handling
  * @param {string} endpoint - API endpoint
  * @param {Object} options - Fetch options
  * @returns {Promise<Response>} Fetch response
  */
-async function fetchWithFallback(endpoint, options = {}) {
-  let lastError;
-  
-  for (const baseUrl of API_URLS) {
-    try {
-      const response = await fetch(`${baseUrl}${endpoint}`, options);
-      if (response.ok) {
-        return response;
-      }
-      lastError = new Error(`HTTP error ${response.status}`);
-    } catch (error) {
-      lastError = error;
-      // Continue to next URL
+async function fetchFromAPI(endpoint, options = {}) {
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
     }
+    
+    return response;
+  } catch (error) {
+    console.error(`API error (${endpoint}):`, error);
+    throw error;
   }
-  
-  throw lastError || new Error('Failed to connect to any API endpoint');
 }
 
 /**
@@ -39,7 +32,7 @@ async function fetchWithFallback(endpoint, options = {}) {
  */
 export async function fetchTeamRequests() {
   try {
-    const response = await fetchWithFallback('/requests');
+    const response = await fetchFromAPI('/requests');
     return await response.json();
   } catch (error) {
     console.error('Error fetching team requests:', error);
@@ -54,7 +47,7 @@ export async function fetchTeamRequests() {
  */
 export async function createTeamRequest(teamData) {
   try {
-    const response = await fetchWithFallback('/requests', {
+    const response = await fetchFromAPI('/requests', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,7 +70,7 @@ export async function createTeamRequest(teamData) {
  */
 export async function updateTeamRequest(id, teamData) {
   try {
-    const response = await fetchWithFallback(`/requests/${id}`, {
+    const response = await fetchFromAPI(`/requests/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +93,7 @@ export async function updateTeamRequest(id, teamData) {
  */
 export async function deleteTeamRequest(id, ownerFingerprint) {
   try {
-    const response = await fetchWithFallback(`/requests/${id}`, {
+    const response = await fetchFromAPI(`/requests/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

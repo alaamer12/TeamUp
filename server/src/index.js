@@ -1,86 +1,54 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
-const path = require('path');
+const { connectToDatabase } = require('./config/database');
+const TeamRequest = require('./models/TeamRequest');
 
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Data storage path
-const DATA_DIR = path.join(__dirname, '../data');
-const REQUESTS_FILE = path.join(DATA_DIR, 'requests.json');
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-// Initialize requests file if it doesn't exist
-if (!fs.existsSync(REQUESTS_FILE)) {
-  fs.writeFileSync(REQUESTS_FILE, JSON.stringify([], null, 2));
-}
+// Connect to MongoDB
+connectToDatabase();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Helper functions for data operations
-const readRequests = () => {
-  try {
-    const data = fs.readFileSync(REQUESTS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading requests:', error);
-    return [];
-  }
-};
-
-const writeRequests = (data) => {
-  try {
-    fs.writeFileSync(REQUESTS_FILE, JSON.stringify(data, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing requests:', error);
-    return false;
-  }
-};
-
 // API Routes
-app.get('/api/requests', (req, res) => {
-  const requests = readRequests();
-  res.json(requests);
+app.get('/api/requests', async (req, res) => {
+  try {
+    const requests = await TeamRequest.find().sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching requests:', error);
+    res.status(500).json({ error: 'Failed to fetch requests' });
+  }
 });
 
-app.post('/api/requests', (req, res) => {
+app.post('/api/requests', async (req, res) => {
   try {
-    const requests = readRequests();
-    const newRequest = {
-      id: uuidv4(),
-      ...req.body,
-      createdAt: new Date().toISOString()
-    };
-    
-    requests.push(newRequest);
-    writeRequests(requests);
-    
-    res.status(201).json(newRequest);
+    const newRequest = new TeamRequest(req.body);
+    const savedRequest = await newRequest.save();
+    res.status(201).json(savedRequest);
   } catch (error) {
     console.error('Error creating request:', error);
     res.status(500).json({ error: 'Failed to create request' });
   }
 });
 
-app.delete('/api/requests/:id', (req, res) => {
+app.delete('/api/requests/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { ownerFingerprint } = req.body;
-    let requests = readRequests();
     
-    const request = requests.find(request => request.id === id);
+    // Find the request
+    const request = await TeamRequest.findById(id);
     
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
@@ -92,8 +60,7 @@ app.delete('/api/requests/:id', (req, res) => {
     }
     
     // Delete the request
-    requests = requests.filter(request => request.id !== id);
-    writeRequests(requests);
+    await TeamRequest.findByIdAndDelete(id);
     
     res.json({ message: 'Request deleted successfully' });
   } catch (error) {
@@ -102,40 +69,40 @@ app.delete('/api/requests/:id', (req, res) => {
   }
 });
 
-app.put('/api/requests/:id', (req, res) => {
+app.put('/api/requests/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updatedData = req.body;
-    let requests = readRequests();
     
-    const requestIndex = requests.findIndex(request => request.id === id);
+    // Find the request
+    const request = await TeamRequest.findById(id);
     
-    if (requestIndex === -1) {
+    if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
     
     // Check ownership
-    if (requests[requestIndex].ownerFingerprint !== updatedData.ownerFingerprint) {
+    if (request.ownerFingerprint !== updatedData.ownerFingerprint) {
       return res.status(403).json({ error: 'Not authorized to update this request' });
     }
     
-    // Update the request while preserving id, createdAt and ownerFingerprint
-    const updatedRequest = {
-      ...updatedData,
-      id: requests[requestIndex].id,
-      createdAt: requests[requestIndex].createdAt,
-      ownerFingerprint: requests[requestIndex].ownerFingerprint,
-      updatedAt: new Date().toISOString()
-    };
-    
-    requests[requestIndex] = updatedRequest;
-    writeRequests(requests);
+    // Update the request
+    const updatedRequest = await TeamRequest.findByIdAndUpdate(
+      id,
+      { ...updatedData, updatedAt: new Date() },
+      { new: true }
+    );
     
     res.json(updatedRequest);
   } catch (error) {
     console.error('Error updating request:', error);
     res.status(500).json({ error: 'Failed to update request' });
   }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date() });
 });
 
 // Start the server

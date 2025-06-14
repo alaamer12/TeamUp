@@ -14,7 +14,9 @@
     "preview": "vite preview",
     "server:start": "cd server && npm run start",
     "server:install": "cd server && npm install",
-    "setup": "npm install && npm run server:install"
+    "setup": "npm install && npm run server:install",
+    "deploy": "node deploy-teamup.js",
+    "migrate": "cd server && npm run migrate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

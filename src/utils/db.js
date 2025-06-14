@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Key for storing team requests in IndexedDB
 const TEAM_REQUESTS_KEY = 'teamup-team-requests';
+const OFFLINE_CHANGES_KEY = 'teamup-offline-changes';
 
 // Flag to track if we're in offline mode
 let isOfflineMode = false;
@@ -16,7 +17,7 @@ let isOfflineMode = false;
 export async function saveTeamRequest(teamData) {
   try {
     // If it has an ID, it's an update
-    if (teamData.id) {
+    if (teamData.id || teamData._id) {
       return await updateTeamRequest(teamData);
     }
     
@@ -33,7 +34,7 @@ export async function saveTeamRequest(teamData) {
     // Generate an ID and add timestamp if it's a new request
     const newRequest = {
       ...teamData,
-      id: teamData.id || uuidv4(),
+      id: teamData.id || teamData._id || uuidv4(),
       createdAt: teamData.createdAt || new Date().toISOString()
     };
     
@@ -47,8 +48,9 @@ export async function saveTeamRequest(teamData) {
     }
     
     // If it has an ID, update existing request
-    if (teamData.id) {
-      const index = requests.findIndex(r => r.id === teamData.id);
+    if (teamData.id || teamData._id) {
+      const id = teamData.id || teamData._id;
+      const index = requests.findIndex(r => r.id === id || r._id === id);
       if (index !== -1) {
         requests[index] = {
           ...newRequest,
@@ -66,6 +68,9 @@ export async function saveTeamRequest(teamData) {
     // Save back to IndexedDB
     await set(TEAM_REQUESTS_KEY, requests);
     
+    // Track offline changes for future sync
+    await trackOfflineChange('create', newRequest);
+    
     // Show offline mode notification
     console.log('Operating in offline mode - data saved locally');
     notifyListingsUpdated();
@@ -80,13 +85,15 @@ export async function saveTeamRequest(teamData) {
  * @returns {Promise<Object>} Updated team request
  */
 export async function updateTeamRequest(teamData) {
-  if (!teamData.id) {
+  const id = teamData.id || teamData._id;
+  
+  if (!id) {
     throw new Error('Team request ID is required for updates');
   }
   
   try {
     // Try to update on the backend first
-    const updatedRequest = await apiUpdateTeamRequest(teamData.id, teamData);
+    const updatedRequest = await apiUpdateTeamRequest(id, teamData);
     notifyListingsUpdated();
     return updatedRequest;
   } catch (error) {
@@ -104,7 +111,7 @@ export async function updateTeamRequest(teamData) {
     }
     
     // Find and update the request
-    const index = requests.findIndex(r => r.id === teamData.id);
+    const index = requests.findIndex(r => r.id === id || r._id === id);
     
     if (index === -1) {
       throw new Error('Team request not found');
@@ -125,6 +132,10 @@ export async function updateTeamRequest(teamData) {
     
     // Save back to IndexedDB
     await set(TEAM_REQUESTS_KEY, requests);
+    
+    // Track offline changes for future sync
+    await trackOfflineChange('update', updatedRequest);
+    
     notifyListingsUpdated();
     
     return updatedRequest;
@@ -140,6 +151,10 @@ export async function getTeamRequests() {
     // Try to fetch from backend first
     if (!isOfflineMode) {
       const requests = await fetchTeamRequests();
+      
+      // Update local cache with the latest data
+      await set(TEAM_REQUESTS_KEY, requests);
+      
       return requests;
     }
   } catch (error) {
@@ -181,7 +196,7 @@ export async function deleteTeamRequest(id, ownerFingerprint) {
     let requests = await get(TEAM_REQUESTS_KEY) || [];
     
     // Find the request
-    const request = requests.find(r => r.id === id);
+    const request = requests.find(r => r.id === id || r._id === id);
     
     // Check ownership
     if (!request || request.ownerFingerprint !== ownerFingerprint) {
@@ -189,14 +204,95 @@ export async function deleteTeamRequest(id, ownerFingerprint) {
     }
     
     // Filter out the request
-    requests = requests.filter(r => r.id !== id);
+    requests = requests.filter(r => r.id !== id && r._id !== id);
     
     // Save back to IndexedDB
     await set(TEAM_REQUESTS_KEY, requests);
+    
+    // Track offline changes for future sync
+    await trackOfflineChange('delete', { id, ownerFingerprint });
+    
     notifyListingsUpdated();
   } catch (error) {
     console.error('Failed to delete local team request:', error);
     throw error;
+  }
+}
+
+/**
+ * Track changes made while offline for future synchronization
+ * @param {string} action - The action performed (create, update, delete)
+ * @param {Object} data - The data associated with the action
+ */
+async function trackOfflineChange(action, data) {
+  try {
+    const changes = await get(OFFLINE_CHANGES_KEY) || [];
+    changes.push({
+      action,
+      data,
+      timestamp: new Date().toISOString()
+    });
+    await set(OFFLINE_CHANGES_KEY, changes);
+  } catch (error) {
+    console.error('Failed to track offline change:', error);
+  }
+}
+
+/**
+ * Synchronize offline changes with the server when back online
+ * @returns {Promise<boolean>} Whether sync was successful
+ */
+export async function syncOfflineChanges() {
+  try {
+    const changes = await get(OFFLINE_CHANGES_KEY) || [];
+    
+    if (changes.length === 0) {
+      return true; // Nothing to sync
+    }
+    
+    console.log(`Syncing ${changes.length} offline changes...`);
+    
+    // Sort changes by timestamp
+    changes.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    const failedChanges = [];
+    
+    // Process each change
+    for (const change of changes) {
+      try {
+        switch (change.action) {
+          case 'create':
+            await createTeamRequest(change.data);
+            break;
+          case 'update':
+            const id = change.data.id || change.data._id;
+            await apiUpdateTeamRequest(id, change.data);
+            break;
+          case 'delete':
+            await apiDeleteTeamRequest(change.data.id, change.data.ownerFingerprint);
+            break;
+        }
+      } catch (error) {
+        console.error(`Failed to sync ${change.action} operation:`, error);
+        failedChanges.push(change);
+      }
+    }
+    
+    // Update the offline changes to only include failed ones
+    await set(OFFLINE_CHANGES_KEY, failedChanges);
+    
+    // Reset offline mode if all changes were synced
+    if (failedChanges.length === 0) {
+      isOfflineMode = false;
+      console.log('All offline changes synced successfully');
+      return true;
+    } else {
+      console.log(`${failedChanges.length} changes failed to sync`);
+      return false;
+    }
+  } catch (error) {
+    console.error('Failed to sync offline changes:', error);
+    return false;
   }
 }
 
@@ -222,4 +318,26 @@ export function subscribeToListingsUpdates(callback) {
 export function notifyListingsUpdated() {
   const channel = new BroadcastChannel('teamup-listings');
   channel.postMessage({ type: 'LISTINGS_UPDATED' });
+}
+
+/**
+ * Check if we're online and try to sync offline changes
+ */
+export function setupOnlineSync() {
+  // Check if we're online when the app loads
+  if (navigator.onLine && isOfflineMode) {
+    syncOfflineChanges();
+  }
+  
+  // Listen for online events
+  window.addEventListener('online', () => {
+    console.log('Back online, attempting to sync changes...');
+    syncOfflineChanges();
+  });
+  
+  // Listen for offline events
+  window.addEventListener('offline', () => {
+    console.log('Gone offline, changes will be saved locally');
+    isOfflineMode = true;
+  });
 }

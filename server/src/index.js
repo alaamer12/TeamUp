@@ -7,7 +7,7 @@ const path = require('path');
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Data storage path
 const DATA_DIR = path.join(__dirname, '../data');

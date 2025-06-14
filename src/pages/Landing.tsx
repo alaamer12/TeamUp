@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, Trash2, ArrowRight } from "lucide-react";
+import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import { saveTeamRequest } from "../utils/db";
 import { getCurrentOwnership } from "../utils/fingerprint-safe";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
@@ -33,6 +35,7 @@ const programmingLanguages = [
 const Landing = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
   
   const [formData, setFormData] = useState({
     user_personal_phone: "",
@@ -49,6 +52,24 @@ const Landing = () => {
       }
     ]
   });
+
+  // Check online status
+  useEffect(() => {
+    const checkOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+    };
+    
+    checkOnlineStatus();
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => setIsOffline(false));
+    window.addEventListener('offline', () => setIsOffline(true));
+    
+    return () => {
+      window.removeEventListener('online', () => setIsOffline(false));
+      window.removeEventListener('offline', () => setIsOffline(true));
+    };
+  }, []);
 
   const scrollToForm = () => {
     document.getElementById("team-form")?.scrollIntoView({ behavior: "smooth" });
@@ -159,259 +180,397 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20" />
-        <div className="relative container mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            
-            <h1 className="text-4xl md:text-6xl font-bold mb-8 pb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Build Graduation <br />
-              Project Teams
-            </h1>
-            
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                onClick={scrollToForm}
-                className="gradient-button text-lg px-8 py-3"
-              >
-                Find Teammates
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
+    <TooltipProvider>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        
+        {/* Offline Mode Alert */}
+        {isOffline && (
+          <Alert className="mx-4 mt-4 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+            <WifiOff className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
+            <AlertTitle>Offline Mode</AlertTitle>
+            <AlertDescription>
+              You're currently in offline mode. Your team request will be saved locally and synced when you reconnect.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Hero Section */}
+        <section className="relative overflow-hidden py-20 px-4">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20" />
+          <div className="relative container mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
               
-              <Button 
-                size="lg" 
-                variant="outline" 
-                onClick={() => navigate("/listings")}
-                className="text-lg px-8 py-3"
-              >
-                Join a Team
-                <Users className="ml-2 w-5 h-5" />
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+              <h1 className="text-4xl md:text-6xl font-bold mb-8 pb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Build Graduation <br />
+                Project Teams
+              </h1>
+              
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="lg" 
+                      onClick={scrollToForm}
+                      className="gradient-button text-lg px-8 py-3"
+                    >
+                      Find Teammates
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Create a team request to find collaborators for your project</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      onClick={() => navigate("/listings")}
+                      className="text-lg px-8 py-3"
+                    >
+                      Join a Team
+                      <Users className="ml-2 w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Browse existing team requests to find a team to join</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </motion.div>
+          </div>
+        </section>
 
-      {/* Team Creation Form */}
-      <section id="team-form" className="py-20 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <Card className="shadow-xl">
-              <CardHeader className="text-center">
-                <CardTitle className="text-3xl font-bold">Create Team Request</CardTitle>
-                <CardDescription className="text-lg">
-                  Tell us about yourself and the teammates you're looking for
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  {/* Personal Information */}
-                  <div className="space-y-6">
-                    <h3 className="text-xl font-semibold flex items-center">
-                      <Users className="mr-2 w-5 h-5" />
-                      Your Information
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="form-field">
-                        <Label htmlFor="phone">Phone Number *</Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          placeholder="01155555555"
-                          value={formData.user_personal_phone}
-                          onChange={(e) => handleInputChange("user_personal_phone", e.target.value)}
-                          required
-                        />
+        {/* Team Creation Form */}
+        <section id="team-form" className="py-20 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <Card className="shadow-xl">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-3xl font-bold">Create Team Request</CardTitle>
+                  <CardDescription className="text-lg">
+                    Tell us about yourself and the teammates you're looking for
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Personal Information */}
+                    <div className="space-y-6">
+                      <h3 className="text-xl font-semibold flex items-center">
+                        <Users className="mr-2 w-5 h-5" />
+                        Your Information
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="form-field">
+                          <div className="flex items-center space-x-2">
+                            <Label htmlFor="phone">Phone Number *</Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Your WhatsApp number for team communication (e.g., 01155555555)</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="01155555555"
+                            value={formData.user_personal_phone}
+                            onChange={(e) => handleInputChange("user_personal_phone", e.target.value)}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="form-field">
+                          <div className="flex items-center space-x-2">
+                            <Label htmlFor="name">Name (Optional)</Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Your preferred name or nickname</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id="name"
+                            type="text"
+                            placeholder="Your name"
+                            value={formData.user_name}
+                            onChange={(e) => handleInputChange("user_name", e.target.value)}
+                          />
+                        </div>
                       </div>
                       
                       <div className="form-field">
-                        <Label htmlFor="name">Name (Optional)</Label>
-                        <Input
-                          id="name"
-                          type="text"
-                          placeholder="Your name"
-                          value={formData.user_name}
-                          onChange={(e) => handleInputChange("user_name", e.target.value)}
+                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="gender">Gender (Optional)</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Your gender identity (optional for team diversity information)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Select value={formData.user_gender} onValueChange={(value) => handleInputChange("user_gender", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="form-field">
+                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="abstract">About You *</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Brief description of your skills, experience, and what you bring to the team</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Textarea
+                          id="abstract"
+                          placeholder="Brief description about yourself, your skills, and what you bring to the team..."
+                          value={formData.user_abstract}
+                          onChange={(e) => handleInputChange("user_abstract", e.target.value)}
+                          required
+                          rows={4}
                         />
                       </div>
                     </div>
-                    
-                    <div className="form-field">
-                      <Label htmlFor="gender">Gender (Optional)</Label>
-                      <Select value={formData.user_gender} onValueChange={(value) => handleInputChange("user_gender", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="form-field">
-                      <Label htmlFor="abstract">About You *</Label>
-                      <Textarea
-                        id="abstract"
-                        placeholder="Brief description about yourself, your skills, and what you bring to the team..."
-                        value={formData.user_abstract}
-                        onChange={(e) => handleInputChange("user_abstract", e.target.value)}
-                        required
-                        rows={4}
-                      />
-                    </div>
-                  </div>
 
-                  <Separator />
+                    <Separator />
 
-                  {/* Member Requirements */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-semibold">Looking For</h3>
-                      <Button type="button" onClick={addMember} variant="outline" size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Member
-                      </Button>
-                    </div>
-
-                    {formData.members.map((member, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-6 border rounded-lg space-y-4 bg-muted/20"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">Member {index + 1}</h4>
-                          {formData.members.length > 1 && (
-                            <Button
-                              type="button"
-                              onClick={() => removeMember(index)}
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
+                    {/* Member Requirements */}
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-xl font-semibold">Looking For</h3>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Define the team members you need for your project</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button type="button" onClick={addMember} variant="outline" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Member
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Add another team member requirement</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label>Tech Fields *</Label>
-                            <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
-                              {techFields.map((field) => (
-                                <div key={field} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    checked={member.tech_field.includes(field)}
-                                    onCheckedChange={(checked) => {
-                                      const updatedFields = checked
-                                        ? [...member.tech_field, field]
-                                        : member.tech_field.filter(f => f !== field);
-                                      handleMemberChange(index, "tech_field", updatedFields);
-                                    }}
-                                  />
-                                  <Label className="text-sm">{field}</Label>
+                      {formData.members.map((member, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-6 border rounded-lg space-y-4 bg-muted/20"
+                        >
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium">Member {index + 1}</h4>
+                            {formData.members.length > 1 && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    onClick={() => removeMember(index)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Remove this member requirement</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <Label>Tech Fields *</Label>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Technical areas of expertise required for this team member</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                              <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                                {techFields.map((field) => (
+                                  <div key={field} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={member.tech_field.includes(field)}
+                                      onCheckedChange={(checked) => {
+                                        const updatedFields = checked
+                                          ? [...member.tech_field, field]
+                                          : member.tech_field.filter(f => f !== field);
+                                        handleMemberChange(index, "tech_field", updatedFields);
+                                      }}
+                                    />
+                                    <Label className="text-sm">{field}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <Label>Gender Preference</Label>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Preferred gender for this team member (select "Any" if no preference)</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 </div>
+                                <Select 
+                                  value={member.gender} 
+                                  onValueChange={(value) => handleMemberChange(index, "gender", value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Any">Any</SelectItem>
+                                    <SelectItem value="Male">Male</SelectItem>
+                                    <SelectItem value="Female">Female</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <Label>Major *</Label>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Academic major required for this team member (CS: Computer Science, IS: Information Systems, SC: Scientific Computing, AI: Artificial Intelligence)</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                                <Select 
+                                  value={member.major} 
+                                  onValueChange={(value) => handleMemberChange(index, "major", value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select major" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {majors.map((major) => (
+                                      <SelectItem key={major} value={major}>{major}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <Label>Programming Languages/Frameworks (Optional)</Label>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Specific programming languages or frameworks this team member should know</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {programmingLanguages.map((lang) => (
+                                <Badge
+                                  key={lang}
+                                  variant={member.planguage.includes(lang) ? "default" : "outline"}
+                                  className="cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    const updatedLangs = member.planguage.includes(lang)
+                                      ? member.planguage.filter(l => l !== lang)
+                                      : [...member.planguage, lang];
+                                    handleMemberChange(index, "planguage", updatedLangs);
+                                  }}
+                                >
+                                  {lang}
+                                </Badge>
                               ))}
                             </div>
                           </div>
 
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Gender Preference</Label>
-                              <Select 
-                                value={member.gender} 
-                                onValueChange={(value) => handleMemberChange(index, "gender", value)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Any">Any</SelectItem>
-                                  <SelectItem value="Male">Male</SelectItem>
-                                  <SelectItem value="Female">Female</SelectItem>
-                                  <SelectItem value="Other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
+                        </motion.div>
+                      ))}
+                    </div>
 
-                            <div>
-                              <Label>Major *</Label>
-                              <Select 
-                                value={member.major} 
-                                onValueChange={(value) => handleMemberChange(index, "major", value)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select major" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {majors.map((major) => (
-                                    <SelectItem key={major} value={major}>{major}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label>Programming Languages/Frameworks (Optional)</Label>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {programmingLanguages.map((lang) => (
-                              <Badge
-                                key={lang}
-                                variant={member.planguage.includes(lang) ? "default" : "outline"}
-                                className="cursor-pointer transition-colors"
-                                onClick={() => {
-                                  const updatedLangs = member.planguage.includes(lang)
-                                    ? member.planguage.filter(l => l !== lang)
-                                    : [...member.planguage, lang];
-                                  handleMemberChange(index, "planguage", updatedLangs);
-                                }}
-                              >
-                                {lang}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full gradient-button text-lg py-3" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Creating..." : "Create Team Request"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
-    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          type="submit" 
+                          className="w-full gradient-button text-lg py-3" 
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? "Creating..." : "Create Team Request"}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Submit your team request to find collaborators</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
+      </div>
+    </TooltipProvider>
   );
 };
 

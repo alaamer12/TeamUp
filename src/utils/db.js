@@ -1,125 +1,149 @@
-import { fetchTeamRequests, createTeamRequest, updateTeamRequest as apiUpdateTeamRequest, deleteTeamRequest as apiDeleteTeamRequest } from './api-client';
+import { get, set, del } from 'idb-keyval';
+import { createTeamRequest, fetchTeamRequests, deleteTeamRequest as apiDeleteTeamRequest } from './api-client';
+import { v4 as uuidv4 } from 'uuid';
 
-// Cache for team requests to reduce API calls
-let teamRequestsCache = null;
-let lastFetchTime = 0;
-const CACHE_TTL = 60 * 1000; // 1 minute cache TTL
+// Key for storing team requests in IndexedDB
+const TEAM_REQUESTS_KEY = 'teamup-team-requests';
+
+// Flag to track if we're in offline mode
+let isOfflineMode = false;
 
 /**
- * Save a new team request to the server
+ * Save a team request
  * @param {Object} teamData - Team request data
- * @returns {Promise<string>} - ID of the created team request
+ * @returns {Promise<Object>} Saved team request
  */
 export async function saveTeamRequest(teamData) {
   try {
-    const response = await createTeamRequest(teamData);
-    notifyListingsUpdate();
-    invalidateCache();
-    return response.id;
+    // Try to save to backend first
+    const savedRequest = await createTeamRequest(teamData);
+    notifyListingsUpdated();
+    return savedRequest;
   } catch (error) {
     console.error('Failed to save team request:', error);
-    throw error;
+    
+    // Fallback to local storage if backend fails
+    isOfflineMode = true;
+    
+    // Generate an ID and add timestamp
+    const newRequest = {
+      ...teamData,
+      id: uuidv4(),
+      createdAt: new Date().toISOString()
+    };
+    
+    // Get existing requests
+    let requests = [];
+    try {
+      requests = await get(TEAM_REQUESTS_KEY) || [];
+    } catch (e) {
+      // If get fails, start with empty array
+      requests = [];
+    }
+    
+    // Add new request
+    requests.push(newRequest);
+    
+    // Save back to IndexedDB
+    await set(TEAM_REQUESTS_KEY, requests);
+    
+    // Show offline mode notification
+    console.log('Operating in offline mode - data saved locally');
+    notifyListingsUpdated();
+    
+    return newRequest;
   }
 }
 
 /**
- * Get all team requests from the server
- * @param {boolean} forceRefresh - Whether to bypass the cache
- * @returns {Promise<Array>} - Array of team requests
+ * Get all team requests
+ * @returns {Promise<Array>} Team requests
  */
-export async function getTeamRequests(forceRefresh = false) {
-  const now = Date.now();
-  
-  // Use cache if available and not expired
-  if (!forceRefresh && teamRequestsCache && (now - lastFetchTime < CACHE_TTL)) {
-    return teamRequestsCache;
-  }
-  
+export async function getTeamRequests() {
   try {
-    const teams = await fetchTeamRequests();
-    
-    // Update cache
-    teamRequestsCache = teams;
-    lastFetchTime = now;
-    
-    return teams;
+    // Try to fetch from backend first
+    if (!isOfflineMode) {
+      const requests = await fetchTeamRequests();
+      return requests;
+    }
   } catch (error) {
     console.error('Failed to fetch team requests:', error);
-    // If we have a cache, return it even if expired
-    if (teamRequestsCache) {
-      return teamRequestsCache;
-    }
-    throw error;
+    isOfflineMode = true;
+  }
+  
+  // Fallback to local storage
+  try {
+    const localRequests = await get(TEAM_REQUESTS_KEY) || [];
+    return localRequests;
+  } catch (error) {
+    console.error('Failed to get local team requests:', error);
+    return [];
   }
 }
 
 /**
  * Delete a team request
  * @param {string} id - Team request ID
- * @param {string} ownerFingerprint - Owner's fingerprint for verification
+ * @param {string} ownerFingerprint - Owner's fingerprint
  * @returns {Promise<void>}
  */
 export async function deleteTeamRequest(id, ownerFingerprint) {
   try {
-    await apiDeleteTeamRequest(id, ownerFingerprint);
-    notifyListingsUpdate();
-    invalidateCache();
+    // Try to delete from backend first
+    if (!isOfflineMode) {
+      await apiDeleteTeamRequest(id, ownerFingerprint);
+      notifyListingsUpdated();
+      return;
+    }
   } catch (error) {
     console.error('Failed to delete team request:', error);
-    throw error;
+    isOfflineMode = true;
   }
-}
-
-/**
- * Update a team request
- * @param {string} id - Team request ID
- * @param {Object} updatedData - Updated team data
- * @returns {Promise<Object>} - Updated team request
- */
-export async function updateTeamRequest(id, updatedData) {
+  
+  // Fallback to local storage
   try {
-    const response = await apiUpdateTeamRequest(id, updatedData);
-    notifyListingsUpdate();
-    invalidateCache();
-    return response;
+    let requests = await get(TEAM_REQUESTS_KEY) || [];
+    
+    // Find the request
+    const request = requests.find(r => r.id === id);
+    
+    // Check ownership
+    if (!request || request.ownerFingerprint !== ownerFingerprint) {
+      throw new Error('Not authorized to delete this request');
+    }
+    
+    // Filter out the request
+    requests = requests.filter(r => r.id !== id);
+    
+    // Save back to IndexedDB
+    await set(TEAM_REQUESTS_KEY, requests);
+    notifyListingsUpdated();
   } catch (error) {
-    console.error('Failed to update team request:', error);
+    console.error('Failed to delete local team request:', error);
     throw error;
   }
 }
 
 /**
- * Invalidate the cache to force a refresh on next fetch
+ * Subscribe to listings updates
+ * @param {Function} callback - Callback to run when listings are updated
+ * @returns {Function} Unsubscribe function
  */
-function invalidateCache() {
-  teamRequestsCache = null;
-  lastFetchTime = 0;
+export function subscribeToListingsUpdates(callback) {
+  const channel = new BroadcastChannel('teamup-listings');
+  
+  channel.addEventListener('message', callback);
+  
+  return () => {
+    channel.removeEventListener('message', callback);
+    channel.close();
+  };
 }
-
-// BroadcastChannel for cross-tab sync
-const channel = new BroadcastChannel('team-listings-sync');
 
 /**
  * Notify other tabs that listings have been updated
  */
-function notifyListingsUpdate() {
+export function notifyListingsUpdated() {
+  const channel = new BroadcastChannel('teamup-listings');
   channel.postMessage({ type: 'LISTINGS_UPDATED' });
-}
-
-/**
- * Subscribe to listings updates from other tabs
- * @param {Function} callback - Callback function to be called when listings are updated
- * @returns {Function} - Unsubscribe function
- */
-export function subscribeToListingsUpdates(callback) {
-  const handleMessage = (event) => {
-    if (event.data?.type === 'LISTINGS_UPDATED') {
-      // Invalidate cache when we receive an update
-      invalidateCache();
-      callback(event);
-    }
-  };
-  
-  channel.addEventListener('message', handleMessage);
-  return () => channel.removeEventListener('message', handleMessage);
 }

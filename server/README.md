@@ -41,4 +41,4 @@ Data is stored in a JSON file (`data/requests.json`). This simple storage soluti
 
 ## Environment Variables
 
-- `PORT`: The port the server listens on (default: 3000) 
+- `PORT`: The port the server listens on (default: 8080) 

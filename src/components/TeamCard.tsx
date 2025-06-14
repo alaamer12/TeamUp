@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MessageCircle, Edit, Trash2, User, Calendar, Clock, HelpCircle } from "lucide-react";
+import { MessageCircle, Edit, Trash2, User, Calendar, Clock, HelpCircle, Users } from "lucide-react";
 import { useCardOwnership } from "../hooks/useCardOwnership";
 import { deleteTeamRequest } from "../utils/db";
 import { toast } from "@/hooks/use-toast";
@@ -22,26 +17,10 @@ interface TeamCardProps {
   onUpdate: () => void;
 }
 
-const techFields = [
-  "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
-  "Data Science", "AI [ML, DL, CV, NLP]", "DevOps", "UI/UX",
-];
-
-const majors = [
-  "CS", "IS", "SC", "AI"
-];
-
-const programmingLanguages = [
-  "JavaScript", "Python", "Java", "C++", "C# [.NET]", "Rust", "PHP",
-  "TypeScript", "Flutter", "React Native", "React", "Angular", "Vue", "Other"
-];
-
 const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
   const navigate = useNavigate();
   const { isOwner, currentFingerprint } = useCardOwnership(team);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editFormData, setEditFormData] = useState({ ...team });
 
   const handleDelete = async () => {
     try {
@@ -62,8 +41,6 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
   };
 
   const handleEdit = () => {
-    // For simplicity, we'll redirect to the landing page with the team data
-    // In a real app, you might want to implement a proper edit form here
     navigate('/', { state: { editMode: true, teamData: team } });
   };
 
@@ -104,7 +81,6 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
       return null;
     }
   };
-
   return (
     <TooltipProvider>
       <motion.div
@@ -113,40 +89,42 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
         transition={{ duration: 0.5 }}
         className="team-card"
       >
-        <Card className="h-full">
-          <CardHeader className="pb-4">
-            <div className="flex items-start space-x-4">
-              <Avatar className="w-12 h-12">
+        <Card className="h-full w-full overflow-hidden border border-muted/60 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-primary/30 transition-all duration-200">
+          {/* Card Header with User Info */}
+          <CardHeader className="pb-2 bg-gradient-to-r from-background to-background/80">
+            <div className="flex items-start gap-4">
+              <Avatar className="w-14 h-14 border-2 border-primary/20 shadow-sm">
                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold">
                   {getInitials(team.user_name || "User")}
                 </AvatarFallback>
               </Avatar>
               
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    {team.user_name && (
-                      <h3 className="font-semibold text-lg">{team.user_name}</h3>
-                    )}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center text-sm text-muted-foreground mt-1">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          Created {formatDate(team.createdAt)}
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Date when this team request was created</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+              <div className="flex-1 space-y-1">
+                {team.user_name && (
+                  <h3 className="font-semibold text-lg tracking-tight">{team.user_name}</h3>
+                )}
+                
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        <span>{formatDate(team.createdAt)}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Date when this team request was created</p>
+                    </TooltipContent>
+                  </Tooltip>
                   
                   {team.expiresAt && getDaysLeft(team.expiresAt) !== null && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center text-sm text-muted-foreground">
+                        <div className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
-                          {getDaysLeft(team.expiresAt)} days left
+                          <span className={getDaysLeft(team.expiresAt)! < 3 ? "text-amber-500 font-medium" : ""}>
+                            {getDaysLeft(team.expiresAt)} days left
+                          </span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -155,25 +133,28 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                     </Tooltip>
                   )}
                 </div>
-                
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {team.user_abstract}
-                </p>
               </div>
             </div>
+            
+            {/* Abstract/Description */}
+            {team.user_abstract && (
+              <div className="mt-3 p-3 bg-muted/30 rounded-lg text-sm leading-relaxed">
+                <p className="text-muted-foreground">{team.user_abstract}</p>
+              </div>
+            )}
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            {/* Member Requirements */}
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <h4 className="font-medium text-sm flex items-center">
-                  <User className="w-4 h-4 mr-2" />
-                  Looking for {team.members.length} member{team.members.length !== 1 ? 's' : ''}:
+          <CardContent className="pt-4 space-y-5">
+            {/* Member Requirements Section */}
+            <div>
+              <div className="flex items-center mb-3">
+                <h4 className="font-medium flex items-center text-primary">
+                  <Users className="w-4 h-4 mr-2" />
+                  Looking for {team.members.length} member{team.members.length !== 1 ? 's' : ''}
                 </h4>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    <HelpCircle className="h-4 w-4 ml-2 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Team members being sought for this project</p>
@@ -181,88 +162,94 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                 </Tooltip>
               </div>
               
-              {team.members.map((member: any, index: number) => (
-                <div key={index} className="pl-6 border-l-2 border-muted space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">Member {index + 1}</span>
-                    <div className="flex items-center space-x-2">
-                      {member.gender !== "Any" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="text-xs">
-                              {member.gender}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Preferred gender for this team member</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {member.already_know && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="secondary" className="text-xs">
-                              Known person
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>The team creator already has someone specific in mind</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+              <div className="space-y-4">
+                {team.members.map((member: any, index: number) => (
+                  <div 
+                    key={index} 
+                    className="p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <User className="w-4 h-4 mr-2 text-primary" />
+                        <span className="font-medium">Member {index + 1}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {member.gender !== "Any" && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs">
+                                {member.gender}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Preferred gender for this team member</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                        {member.already_know && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="secondary" className="text-xs">
+                                Known person
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>The team creator already has someone specific in mind</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex flex-wrap gap-1">
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* Left column */}
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1">Technical skills:</div>
+                        <div className="flex flex-wrap gap-1 mb-2">
                           {member.tech_field.map((field: string) => (
                             <Badge key={field} variant="default" className="text-xs">
                               {field}
                             </Badge>
                           ))}
                         </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Technical skills required for this team member</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="text-xs text-muted-foreground">
-                          Major: <span className="font-medium">{member.major}</span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Academic major required (CS: Computer Science, IS: Information Systems, SC: Scientific Computing, AI: Artificial Intelligence)</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    {member.planguage?.length > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {member.planguage.map((lang: string) => (
-                              <Badge key={lang} variant="outline" className="text-xs">
-                                {lang}
-                              </Badge>
-                            ))}
+                      </div>
+                      
+                      {/* Right column */}
+                      <div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-xs font-medium mb-1 flex items-center">
+                              <span className="text-muted-foreground mr-1">Major:</span>
+                              <span>{member.major}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Academic major required (CS: Computer Science, IS: Information Systems, SC: Scientific Computing, AI: Artificial Intelligence)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        {member.planguage?.length > 0 && (
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">Programming:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {member.planguage.map((lang: string) => (
+                                <Badge key={lang} variant="outline" className="text-xs">
+                                  {lang}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Programming languages or frameworks this team member should know</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t">
+            <div className="flex items-center justify-between pt-4 border-t mt-4">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 

@@ -108,4 +108,32 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Deployment on Vercel
+
+This project is configured to be deployed on Vercel with both frontend and backend functionality.
+
+### Deployment Steps
+
+1. Fork or clone this repository to your GitHub account
+2. Sign up for [Vercel](https://vercel.com) if you haven't already
+3. Create a new project in Vercel and import your GitHub repository
+4. Use the following settings:
+   - **Framework Preset**: Vite
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm run setup`
+5. Click "Deploy"
+
+### How It Works
+
+The project uses Vercel Serverless Functions to provide the backend API:
+
+- The frontend is built with Vite and served as static files
+- API endpoints are implemented as serverless functions in the `/api` directory
+- Data is stored in a JSON file in the `/data` directory
+
+### Environment Variables
+
+No environment variables are required for basic functionality. 

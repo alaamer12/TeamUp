@@ -139,20 +139,27 @@ export async function getTeamRequests() {
   try {
     // Try to fetch from backend first
     if (!isOfflineMode) {
-      const requests = await fetchTeamRequests();
-      return requests;
+      try {
+        const requests = await fetchTeamRequests();
+        console.log("Successfully fetched team requests from API:", requests.length);
+        return requests;
+      } catch (error) {
+        console.error('Failed to fetch team requests from API:', error);
+        isOfflineMode = true;
+      }
+    }
+    
+    // Fallback to local storage
+    try {
+      const localRequests = await get(TEAM_REQUESTS_KEY) || [];
+      console.log("Using local team requests:", localRequests.length);
+      return localRequests;
+    } catch (error) {
+      console.error('Failed to get local team requests:', error);
+      return [];
     }
   } catch (error) {
-    console.error('Failed to fetch team requests:', error);
-    isOfflineMode = true;
-  }
-  
-  // Fallback to local storage
-  try {
-    const localRequests = await get(TEAM_REQUESTS_KEY) || [];
-    return localRequests;
-  } catch (error) {
-    console.error('Failed to get local team requests:', error);
+    console.error('Unexpected error in getTeamRequests:', error);
     return [];
   }
 }

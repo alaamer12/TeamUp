@@ -1,30 +1,53 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TeamForge - Build Amazing Teams</title>
+    <title>TeamUp - Build Amazing Teams</title>
     <meta name="description" content="Connect with talented developers, designers, and innovators. Create your dream team for hackathons, projects, and startups." />
-    <meta name="author" content="TeamForge" />
+    <meta name="author" content="TeamUp" />
+    <meta name="keywords" content="team building, hackathon teams, project collaboration, startup teams, developer networking" />
 
-    <meta property="og:title" content="TeamForge - Build Amazing Teams" />
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="TeamUp - Build Amazing Teams" />
     <meta property="og:description" content="Connect with talented developers, designers, and innovators. Create your dream team for hackathons, projects, and startups." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://teamup.dev/" />
+    <meta property="og:image" content="/opengraph-image.png" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="TeamUp - Build Amazing Teams" />
+    <meta name="twitter:description" content="Connect with talented developers, designers, and innovators. Create your dream team for hackathons, projects, and startups." />
+    <meta name="twitter:image" content="/opengraph-image.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" as="style" href="/src/index.css">
+    <link rel="preload" as="script" href="/src/main.tsx">
+    
+    <!-- Theme color for browser UI -->
+    <meta name="theme-color" content="#4f46e5">
   </head>
 
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: 'Inter', sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>This application requires JavaScript to run. Please enable JavaScript in your browser settings.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

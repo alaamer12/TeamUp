@@ -17,6 +17,7 @@ import { saveTeamRequest } from "../utils/db";
 import { getCurrentOwnership } from "../utils/fingerprint-safe";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useLanguage } from "../components/LanguageProvider";
 
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
@@ -35,6 +36,7 @@ const programmingLanguages = [
 const Landing = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -204,9 +206,9 @@ const Landing = () => {
         {isOffline && (
           <Alert className="mx-4 mt-4 bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
             <WifiOff className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
-            <AlertTitle>Offline Mode</AlertTitle>
+            <AlertTitle>{t('landing.offline_title')}</AlertTitle>
             <AlertDescription>
-              You're currently in offline mode. Your team request will be saved locally and synced when you reconnect.
+              {t('landing.offline_description')}
             </AlertDescription>
           </Alert>
         )}
@@ -221,9 +223,8 @@ const Landing = () => {
               transition={{ duration: 0.8 }}
             >
               
-              <h1 className="text-4xl md:text-6xl font-bold mb-8 pb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Build Graduation <br />
-                Project Teams
+              <h1 className="text-4xl md:text-6xl font-bold mb-8 pb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent inline-block">
+                {t('landing.title')}
               </h1>
               
               
@@ -235,12 +236,12 @@ const Landing = () => {
                       onClick={scrollToForm}
                       className="gradient-button text-lg px-8 py-3"
                     >
-                      Find Teammates
+                      {t('landing.find_teammates')}
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Create a team request to find collaborators for your project</p>
+                    <p>{t('landing.create_tooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
                 
@@ -252,12 +253,12 @@ const Landing = () => {
                       onClick={() => navigate("/listings")}
                       className="text-lg px-8 py-3"
                     >
-                      Join a Team
+                      {t('landing.join_team')}
                       <Users className="ml-2 w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Browse existing team requests to find a team to join</p>
+                    <p>{t('landing.join_tooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -277,12 +278,12 @@ const Landing = () => {
               <Card className="shadow-xl">
                 <CardHeader className="text-center">
                   <CardTitle className="text-3xl font-bold">
-                    {isEditMode ? "Edit Team Request" : "Create Team Request"}
+                    {isEditMode ? t('landing.edit_title') : t('landing.create_title')}
                   </CardTitle>
                   <CardDescription className="text-lg">
                     {isEditMode 
-                      ? "Update your team request details" 
-                      : "Tell us about yourself and the teammates you're looking for"}
+                      ? t('landing.edit_description')
+                      : t('landing.create_description')}
                   </CardDescription>
                 </CardHeader>
                 
@@ -292,19 +293,19 @@ const Landing = () => {
                     <div className="space-y-6">
                       <h3 className="text-xl font-semibold flex items-center">
                         <Users className="mr-2 w-5 h-5" />
-                        Your Information
+                        {t('landing.your_info')}
                       </h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="form-field">
                           <div className="flex items-center space-x-2">
-                            <Label htmlFor="phone">Phone Number *</Label>
+                            <Label htmlFor="phone">{t('landing.phone')}</Label>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <HelpCircle className="h-4 w-4 text-muted-foreground" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Your WhatsApp number for team communication (e.g., 01155555555)</p>
+                                <p>{t('landing.phone_tooltip')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -320,13 +321,13 @@ const Landing = () => {
                         
                         <div className="form-field">
                           <div className="flex items-center space-x-2">
-                            <Label htmlFor="name">Name (Optional)</Label>
+                            <Label htmlFor="name">{t('landing.name')}</Label>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <HelpCircle className="h-4 w-4 text-muted-foreground" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Your preferred name or nickname</p>
+                                <p>{t('landing.name_tooltip')}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -342,13 +343,13 @@ const Landing = () => {
                       
                       <div className="form-field">
                         <div className="flex items-center space-x-2">
-                          <Label htmlFor="gender">Gender (Optional)</Label>
+                          <Label htmlFor="gender">{t('landing.gender')}</Label>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Your gender identity (optional for team diversity information)</p>
+                              <p>{t('landing.gender_tooltip')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -357,28 +358,28 @@ const Landing = () => {
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Male">{t('landing.gender_male')}</SelectItem>
+                            <SelectItem value="Female">{t('landing.gender_female')}</SelectItem>
+                            <SelectItem value="Other">{t('landing.gender_other')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
                       <div className="form-field">
                         <div className="flex items-center space-x-2">
-                          <Label htmlFor="abstract">About You *</Label>
+                          <Label htmlFor="abstract">{t('landing.about')}</Label>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Brief description of your skills, experience, and what you bring to the team</p>
+                              <p>{t('landing.about_tooltip')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
                         <Textarea
                           id="abstract"
-                          placeholder="Brief description about yourself, your skills, and what you bring to the team..."
+                          placeholder={t('landing.about_placeholder')}
                           value={formData.user_abstract}
                           onChange={(e) => handleInputChange("user_abstract", e.target.value)}
                           required
@@ -394,13 +395,13 @@ const Landing = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <Users className="h-5 w-5 text-primary" />
-                          <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Looking For</h3>
+                          <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">{t('landing.looking_for')}</h3>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
-                              <p>Define the team members you need for your project</p>
+                              <p>{t('landing.looking_for_tooltip')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
@@ -414,11 +415,11 @@ const Landing = () => {
                               className="border-primary/50 hover:border-primary hover:bg-primary/10 transition-all duration-300"
                             >
                               <Plus className="w-4 h-4 mr-2" />
-                              Add Member
+                              {t('landing.add_member')}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Add another team member requirement</p>
+                            <p>{t('landing.add_member_tooltip')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -426,10 +427,10 @@ const Landing = () => {
                       <Alert variant="default" className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
                         <AlertTitle className="flex items-center">
                           <Users className="h-4 w-4 mr-2 text-blue-500" />
-                          Team Building Tips
+                          {t('landing.tips_title')}
                         </AlertTitle>
                         <AlertDescription className="text-sm text-muted-foreground">
-                          Define specific skills and requirements to attract the right team members. Consider diversity in technical backgrounds for a well-rounded team.
+                          {t('landing.tips_description')}
                         </AlertDescription>
                       </Alert>
 
@@ -447,7 +448,7 @@ const Landing = () => {
                                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold">
                                   {index + 1}
                                 </div>
-                                <h4 className="font-semibold text-lg">Team Member {index + 1}</h4>
+                                <h4 className="font-semibold text-lg">{t('landing.team_member')} {index + 1}</h4>
                               </div>
                               {formData.members.length > 1 && (
                                 <Tooltip>
@@ -463,7 +464,7 @@ const Landing = () => {
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Remove this member requirement</p>
+                                    <p>{t('landing.remove_member')}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               )}
@@ -473,13 +474,13 @@ const Landing = () => {
                               <div className="space-y-4">
                                 <div>
                                   <div className="flex items-center space-x-2 mb-3">
-                                    <Label className="text-base font-medium">Tech Fields *</Label>
+                                    <Label className="text-base font-medium">{t('landing.tech_fields')}</Label>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <HelpCircle className="h-4 w-4 text-muted-foreground" />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Technical areas of expertise required for this team member</p>
+                                        <p>{t('landing.tech_fields_tooltip')}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
@@ -505,13 +506,13 @@ const Landing = () => {
 
                                 <div>
                                   <div className="flex items-center space-x-2 mb-3">
-                                    <Label className="text-base font-medium">Programming Languages/Frameworks</Label>
+                                    <Label className="text-base font-medium">{t('landing.programming')}</Label>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <HelpCircle className="h-4 w-4 text-muted-foreground" />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Specific programming languages or frameworks this team member should know</p>
+                                        <p>{t('landing.programming_tooltip')}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
@@ -544,13 +545,13 @@ const Landing = () => {
                               <div className="space-y-6">
                                 <div>
                                   <div className="flex items-center space-x-2 mb-3">
-                                    <Label className="text-base font-medium">Gender Preference</Label>
+                                    <Label className="text-base font-medium">{t('landing.gender_preference')}</Label>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <HelpCircle className="h-4 w-4 text-muted-foreground" />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Preferred gender for this team member (select "Any" if no preference)</p>
+                                        <p>{t('landing.gender_preference_tooltip')}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
@@ -562,28 +563,27 @@ const Landing = () => {
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="Any">Any</SelectItem>
-                                      <SelectItem value="Male">Male</SelectItem>
-                                      <SelectItem value="Female">Female</SelectItem>
-                                      <SelectItem value="Other">Other</SelectItem>
+                                      <SelectItem value="Any">{t('landing.gender_any')}</SelectItem>
+                                      <SelectItem value="Male">{t('landing.gender_male')}</SelectItem>
+                                      <SelectItem value="Female">{t('landing.gender_female')}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
 
                                 <div>
                                   <div className="flex items-center space-x-2 mb-3">
-                                    <Label className="text-base font-medium">Major *</Label>
+                                    <Label className="text-base font-medium">{t('landing.major')}</Label>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <HelpCircle className="h-4 w-4 text-muted-foreground" />
                                       </TooltipTrigger>
                                       <TooltipContent className="max-w-xs">
-                                        <p>Academic major required for this team member</p>
+                                        <p>{t('landing.major_tooltip')}</p>
                                         <ul className="mt-2 text-xs space-y-1">
-                                          <li><span className="font-bold">CS:</span> Computer Science</li>
-                                          <li><span className="font-bold">IS:</span> Information Systems</li>
-                                          <li><span className="font-bold">SC:</span> Scientific Computing</li>
-                                          <li><span className="font-bold">AI:</span> Artificial Intelligence</li>
+                                          <li><span className="font-bold">CS:</span> {t('landing.major_cs')}</li>
+                                          <li><span className="font-bold">IS:</span> {t('landing.major_is')}</li>
+                                          <li><span className="font-bold">SC:</span> {t('landing.major_sc')}</li>
+                                          <li><span className="font-bold">AI:</span> {t('landing.major_ai')}</li>
                                         </ul>
                                       </TooltipContent>
                                     </Tooltip>
@@ -604,22 +604,6 @@ const Landing = () => {
                                 </div>
 
                                 <div className="pt-2">
-                                  <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                      id={`already-know-${index}`}
-                                      checked={member.already_know}
-                                      onCheckedChange={(checked) => 
-                                        handleMemberChange(index, "already_know", !!checked)
-                                      }
-                                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                    />
-                                    <Label 
-                                      htmlFor={`already-know-${index}`}
-                                      className="text-sm cursor-pointer"
-                                    >
-                                      I already have someone in mind for this role
-                                    </Label>
-                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -631,7 +615,7 @@ const Landing = () => {
                         <div className="flex justify-center">
                           <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm">
                             <Users className="w-4 h-4 mr-2" />
-                            Looking for {formData.members.length} team members
+                            {t('landing.looking_for_members')} {formData.members.length} {t('landing.team_members')}
                           </div>
                         </div>
                       )}
@@ -648,17 +632,17 @@ const Landing = () => {
                             {isSubmitting ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {isEditMode ? "Updating..." : "Creating..."}
+                                {isEditMode ? t('landing.updating') : t('landing.creating')}
                               </>
                             ) : (
                               <>
-                                {isEditMode ? "Update Team Request" : "Create Team Request"}
+                                {isEditMode ? t('landing.update_button') : t('landing.create_button')}
                               </>
                             )}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{isEditMode ? "Update your team request" : "Submit your team request to find collaborators"}</p>
+                          <p>{isEditMode ? t('landing.update_tooltip_submit') : t('landing.create_tooltip_submit')}</p>
                         </TooltipContent>
                       </Tooltip>
                     </CardFooter>

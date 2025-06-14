@@ -390,22 +390,29 @@ const Landing = () => {
                     <Separator />
 
                     {/* Member Requirements */}
-                    <div className="space-y-6">
+                    <div className="space-y-8 my-8">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-xl font-semibold">Looking For</h3>
+                        <div className="flex items-center space-x-3">
+                          <Users className="h-5 w-5 text-primary" />
+                          <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Looking For</h3>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                              <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent className="max-w-xs">
                               <p>Define the team members you need for your project</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button type="button" onClick={addMember} variant="outline" size="sm">
+                            <Button 
+                              type="button" 
+                              onClick={addMember} 
+                              variant="outline" 
+                              size="sm"
+                              className="border-primary/50 hover:border-primary hover:bg-primary/10 transition-all duration-300"
+                            >
                               <Plus className="w-4 h-4 mr-2" />
                               Add Member
                             </Button>
@@ -416,157 +423,218 @@ const Landing = () => {
                         </Tooltip>
                       </div>
 
-                      {formData.members.map((member, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="p-6 border rounded-lg space-y-4 bg-muted/20"
-                        >
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium">Member {index + 1}</h4>
-                            {formData.members.length > 1 && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    onClick={() => removeMember(index)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Remove this member requirement</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
+                      <Alert variant="default" className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                        <AlertTitle className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-blue-500" />
+                          Team Building Tips
+                        </AlertTitle>
+                        <AlertDescription className="text-sm text-muted-foreground">
+                          Define specific skills and requirements to attract the right team members. Consider diversity in technical backgrounds for a well-rounded team.
+                        </AlertDescription>
+                      </Alert>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <Label>Tech Fields *</Label>
+                      <div className="grid grid-cols-1 gap-6">
+                        {formData.members.map((member, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="p-6 border border-primary/20 rounded-xl space-y-6 bg-gradient-to-br from-background to-muted/30 shadow-sm hover:shadow-md transition-all duration-300"
+                          >
+                            <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold">
+                                  {index + 1}
+                                </div>
+                                <h4 className="font-semibold text-lg">Team Member {index + 1}</h4>
+                              </div>
+                              {formData.members.length > 1 && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeMember(index)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>Technical areas of expertise required for this team member</p>
+                                    <p>Remove this member requirement</p>
                                   </TooltipContent>
                                 </Tooltip>
-                              </div>
-                              <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
-                                {techFields.map((field) => (
-                                  <div key={field} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      checked={member.tech_field.includes(field)}
-                                      onCheckedChange={(checked) => {
-                                        const updatedFields = checked
-                                          ? [...member.tech_field, field]
-                                          : member.tech_field.filter(f => f !== field);
-                                        handleMemberChange(index, "tech_field", updatedFields);
-                                      }}
-                                    />
-                                    <Label className="text-sm">{field}</Label>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="space-y-4">
+                                <div>
+                                  <div className="flex items-center space-x-2 mb-3">
+                                    <Label className="text-base font-medium">Tech Fields *</Label>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Technical areas of expertise required for this team member</p>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="space-y-4">
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <Label>Gender Preference</Label>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Preferred gender for this team member (select "Any" if no preference)</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <Select 
-                                  value={member.gender} 
-                                  onValueChange={(value) => handleMemberChange(index, "gender", value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Any">Any</SelectItem>
-                                    <SelectItem value="Male">Male</SelectItem>
-                                    <SelectItem value="Female">Female</SelectItem>
-                                    <SelectItem value="Other">Other</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <Label>Major *</Label>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Academic major required for this team member (CS: Computer Science, IS: Information Systems, SC: Scientific Computing, AI: Artificial Intelligence)</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <Select 
-                                  value={member.major} 
-                                  onValueChange={(value) => handleMemberChange(index, "major", value)}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select major" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {majors.map((major) => (
-                                      <SelectItem key={major} value={major}>{major}</SelectItem>
+                                  <div className="p-4 border rounded-lg bg-background/80 max-h-48 overflow-y-auto space-y-3 grid grid-cols-1 md:grid-cols-2">
+                                    {techFields.map((field) => (
+                                      <div key={field} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`tech-${index}-${field}`}
+                                          checked={member.tech_field.includes(field)}
+                                          onCheckedChange={(checked) => {
+                                            const updatedFields = checked
+                                              ? [...member.tech_field, field]
+                                              : member.tech_field.filter(f => f !== field);
+                                            handleMemberChange(index, "tech_field", updatedFields);
+                                          }}
+                                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                        />
+                                        <Label htmlFor={`tech-${index}-${field}`} className="text-sm cursor-pointer">{field}</Label>
+                                      </div>
                                     ))}
-                                  </SelectContent>
-                                </Select>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="flex items-center space-x-2 mb-3">
+                                    <Label className="text-base font-medium">Programming Languages/Frameworks</Label>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Specific programming languages or frameworks this team member should know</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <div className="p-4 border rounded-lg sm:w-[750px] w-full bg-background/80 min-h-[100px]">
+                                    <div className="flex flex-wrap gap-2 w-full h-full">
+                                      {programmingLanguages.map((lang) => (
+                                        <Badge
+                                          key={lang}
+                                          variant={member.planguage.includes(lang) ? "default" : "outline"}
+                                          className={`cursor-pointer transition-all duration-200 hover:scale-105 m-1 ${
+                                            member.planguage.includes(lang) 
+                                              ? "bg-primary text-primary-foreground" 
+                                              : "hover:border-primary/50"
+                                          }`}
+                                          onClick={() => {
+                                            const updatedLangs = member.planguage.includes(lang)
+                                              ? member.planguage.filter(l => l !== lang)
+                                              : [...member.planguage, lang];
+                                            handleMemberChange(index, "planguage", updatedLangs);
+                                          }}
+                                        >
+                                          {lang}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-6">
+                                <div>
+                                  <div className="flex items-center space-x-2 mb-3">
+                                    <Label className="text-base font-medium">Gender Preference</Label>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Preferred gender for this team member (select "Any" if no preference)</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <Select 
+                                    value={member.gender} 
+                                    onValueChange={(value) => handleMemberChange(index, "gender", value)}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Any">Any</SelectItem>
+                                      <SelectItem value="Male">Male</SelectItem>
+                                      <SelectItem value="Female">Female</SelectItem>
+                                      <SelectItem value="Other">Other</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div>
+                                  <div className="flex items-center space-x-2 mb-3">
+                                    <Label className="text-base font-medium">Major *</Label>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p>Academic major required for this team member</p>
+                                        <ul className="mt-2 text-xs space-y-1">
+                                          <li><span className="font-bold">CS:</span> Computer Science</li>
+                                          <li><span className="font-bold">IS:</span> Information Systems</li>
+                                          <li><span className="font-bold">SC:</span> Scientific Computing</li>
+                                          <li><span className="font-bold">AI:</span> Artificial Intelligence</li>
+                                        </ul>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  <Select 
+                                    value={member.major} 
+                                    onValueChange={(value) => handleMemberChange(index, "major", value)}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select major" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {majors.map((major) => (
+                                        <SelectItem key={major} value={major}>{major}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="pt-2">
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`already-know-${index}`}
+                                      checked={member.already_know}
+                                      onCheckedChange={(checked) => 
+                                        handleMemberChange(index, "already_know", !!checked)
+                                      }
+                                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                    />
+                                    <Label 
+                                      htmlFor={`already-know-${index}`}
+                                      className="text-sm cursor-pointer"
+                                    >
+                                      I already have someone in mind for this role
+                                    </Label>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
+                        ))}
+                      </div>
 
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <Label>Programming Languages/Frameworks (Optional)</Label>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Specific programming languages or frameworks this team member should know</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {programmingLanguages.map((lang) => (
-                                <Badge
-                                  key={lang}
-                                  variant={member.planguage.includes(lang) ? "default" : "outline"}
-                                  className="cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    const updatedLangs = member.planguage.includes(lang)
-                                      ? member.planguage.filter(l => l !== lang)
-                                      : [...member.planguage, lang];
-                                    handleMemberChange(index, "planguage", updatedLangs);
-                                  }}
-                                >
-                                  {lang}
-                                </Badge>
-                              ))}
-                            </div>
+                      {formData.members.length > 1 && (
+                        <div className="flex justify-center">
+                          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm">
+                            <Users className="w-4 h-4 mr-2" />
+                            Looking for {formData.members.length} team members
                           </div>
-
-                        </motion.div>
-                      ))}
+                        </div>
+                      )}
                     </div>
 
                     <CardFooter className="flex justify-center">

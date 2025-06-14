@@ -1,46 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+import { Redis } from '@upstash/redis';
 
-// Data storage path
-const DATA_DIR = path.join(process.cwd(), 'data');
-const REQUESTS_FILE = path.join(DATA_DIR, 'requests.json');
+// Initialize Redis from environment variables
+const redis = new Redis({
+  url: process.env.REDIS_URL || process.env.KV_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
 
-// Helper functions for data operations
-const readRequests = () => {
-  try {
-    // Ensure data directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-
-    // Initialize requests file if it doesn't exist
-    if (!fs.existsSync(REQUESTS_FILE)) {
-      fs.writeFileSync(REQUESTS_FILE, JSON.stringify([], null, 2));
-      return [];
-    }
-
-    const data = fs.readFileSync(REQUESTS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading requests:', error);
-    return [];
-  }
-};
-
-const writeRequests = (data) => {
-  try {
-    // Ensure data directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    
-    fs.writeFileSync(REQUESTS_FILE, JSON.stringify(data, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing requests:', error);
-    return false;
-  }
-};
+// Key for storing team requests
+const TEAM_REQUESTS_KEY = 'teamup-requests';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -60,7 +27,7 @@ export default async function handler(req, res) {
   if (req.method === 'PUT') {
     try {
       const updatedData = req.body;
-      let requests = readRequests();
+      let requests = await redis.get(TEAM_REQUESTS_KEY) || [];
       
       const requestIndex = requests.findIndex(request => request.id === id);
       
@@ -83,7 +50,7 @@ export default async function handler(req, res) {
       };
       
       requests[requestIndex] = updatedRequest;
-      writeRequests(requests);
+      await redis.set(TEAM_REQUESTS_KEY, requests);
       
       return res.status(200).json(updatedRequest);
     } catch (error) {
@@ -96,7 +63,7 @@ export default async function handler(req, res) {
   if (req.method === 'DELETE') {
     try {
       const { ownerFingerprint } = req.body;
-      let requests = readRequests();
+      let requests = await redis.get(TEAM_REQUESTS_KEY) || [];
       
       const request = requests.find(request => request.id === id);
       
@@ -111,7 +78,7 @@ export default async function handler(req, res) {
       
       // Delete the request
       requests = requests.filter(request => request.id !== id);
-      writeRequests(requests);
+      await redis.set(TEAM_REQUESTS_KEY, requests);
       
       return res.status(200).json({ message: 'Request deleted successfully' });
     } catch (error) {
@@ -122,4 +89,4 @@ export default async function handler(req, res) {
   
   // Method not allowed
   return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-} 
+}

@@ -1,47 +1,15 @@
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis from environment variables
+const redis = new Redis({
+  url: process.env.REDIS_URL || process.env.KV_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
+
+// Key for storing team requests
+const TEAM_REQUESTS_KEY = 'teamup-requests';
+
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
-const path = require('path');
-
-// Data storage path
-const DATA_DIR = path.join(process.cwd(), 'data');
-const REQUESTS_FILE = path.join(DATA_DIR, 'requests.json');
-
-// Helper functions for data operations
-const readRequests = () => {
-  try {
-    // Ensure data directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-
-    // Initialize requests file if it doesn't exist
-    if (!fs.existsSync(REQUESTS_FILE)) {
-      fs.writeFileSync(REQUESTS_FILE, JSON.stringify([], null, 2));
-      return [];
-    }
-
-    const data = fs.readFileSync(REQUESTS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading requests:', error);
-    return [];
-  }
-};
-
-const writeRequests = (data) => {
-  try {
-    // Ensure data directory exists
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    
-    fs.writeFileSync(REQUESTS_FILE, JSON.stringify(data, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing requests:', error);
-    return false;
-  }
-};
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -57,22 +25,32 @@ export default async function handler(req, res) {
   
   // GET - Fetch all requests
   if (req.method === 'GET') {
-    const requests = readRequests();
-    return res.status(200).json(requests);
+    try {
+      // Get requests from Redis
+      const requests = await redis.get(TEAM_REQUESTS_KEY) || [];
+      return res.status(200).json(requests);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      return res.status(500).json({ error: 'Failed to fetch requests' });
+    }
   }
   
   // POST - Create a new request
   if (req.method === 'POST') {
     try {
-      const requests = readRequests();
+      // Get existing requests
+      const requests = await redis.get(TEAM_REQUESTS_KEY) || [];
+      
+      // Create new request
       const newRequest = {
         id: uuidv4(),
         ...req.body,
         createdAt: new Date().toISOString()
       };
       
+      // Add to requests and save
       requests.push(newRequest);
-      writeRequests(requests);
+      await redis.set(TEAM_REQUESTS_KEY, requests);
       
       return res.status(201).json(newRequest);
     } catch (error) {
@@ -83,4 +61,4 @@ export default async function handler(req, res) {
   
   // Method not allowed
   return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
-} 
+}

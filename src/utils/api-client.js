@@ -2,7 +2,7 @@
  * API client for communicating with the backend server
  */
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://localhost:3000/api';
 
 /**
  * Fetch all team requests from the server
@@ -10,7 +10,7 @@ const API_URL = 'http://localhost:8080/api';
  */
 export async function fetchTeamRequests() {
   try {
-    const response = await fetch(`${API_URL}/team-requests`);
+    const response = await fetch(`${API_URL}/requests`);
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
     }
@@ -28,7 +28,7 @@ export async function fetchTeamRequests() {
  */
 export async function createTeamRequest(teamData) {
   try {
-    const response = await fetch(`${API_URL}/team-requests`, {
+    const response = await fetch(`${API_URL}/requests`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export async function updateTeamRequest(id, teamData) {
  */
 export async function deleteTeamRequest(id, ownerFingerprint) {
   try {
-    const response = await fetch(`${API_URL}/team-requests/${id}`, {
+    const response = await fetch(`${API_URL}/requests/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

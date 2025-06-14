@@ -40,7 +40,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
   const handleWhatsAppContact = () => {
     const phone = team.user_personal_phone.replace(/\D/g, "");
     const message = encodeURIComponent(
-      `Hi! I saw your team request on TeamForge and I'm interested in joining your team. Let's discuss!`
+      `Hi! I saw your team request on TeamUp and I'm interested in joining your team. Let's discuss!`
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };

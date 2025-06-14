@@ -108,4 +108,32 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Deployment
+
+TeamUp can be deployed using Vercel for the frontend and Render for the backend with MongoDB for data storage.
+
+### Quick Deployment
+
+Run our interactive deployment script:
+
+```bash
+# Using npm
+npm run deploy
+
+# Or directly with Node.js
+node deploy-teamup.js
+```
+
+The script will:
+1. Ask for your MongoDB connection string
+2. Set up environment files
+3. Install dependencies
+4. Migrate existing data (if needed)
+5. Build the frontend
+6. Guide you through deploying to Vercel and Render
+
+### Manual Deployment
+
+For step-by-step instructions, see the [Deployment Guide](./DEPLOYMENT.md). 

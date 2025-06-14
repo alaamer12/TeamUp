@@ -13,6 +13,11 @@ TeamUp is a professional platform designed to connect developers, designers, and
 - **Team Requests**: Send and manage requests to join teams you're interested in.
 - **Direct Communication**: Connect with team leaders and members to discuss project details.
 - **Profile Management**: Showcase your skills, experience, and portfolio to attract potential collaborators.
+- **Team Request Creation**: Create detailed team requests specifying the skills and qualifications you're looking for.
+- **Team Request Management**: Edit or delete your team requests as your needs change.
+- **Advanced Search**: Find potential teammates based on skills, major, and technical fields.
+- **Direct Communication**: Connect directly with team creators via WhatsApp integration.
+- **Offline Support**: Continue using the application even when offline, with data syncing when connection is restored.
 
 ## Project Architecture
 
@@ -90,9 +95,12 @@ TeamUp provides a RESTful API for team request management:
 
 | Method | Endpoint | Description | Authentication |
 |--------|----------|-------------|----------------|
-| GET | `/api/requests` | Get all team requests | Required (fingerprint) |
+| GET | `/api/requests` | Get all team requests | None |
 | POST | `/api/requests` | Create a new team request | None |
-| DELETE | `/api/requests/:id` | Delete a specific request | Required (ownership) |
+| PUT | `/api/requests/:id` | Update an existing team request | Ownership verification |
+| DELETE | `/api/requests/:id` | Delete a team request | Ownership verification |
+
+For more details, see the [Server README](./server/README.md).
 
 ## Contributing
 

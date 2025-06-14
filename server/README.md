@@ -27,13 +27,14 @@ npm start
 
 | Method | Endpoint | Description | Authentication |
 |--------|----------|-------------|----------------|
-| GET | `/api/requests` | Get all team requests | Required (fingerprint) |
+| GET | `/api/requests` | Get all team requests | None |
 | POST | `/api/requests` | Create a new team request | None |
-| DELETE | `/api/requests/:id` | Delete a specific request | Required (ownership) |
+| PUT | `/api/requests/:id` | Update an existing team request | Ownership verification |
+| DELETE | `/api/requests/:id` | Delete a team request | Ownership verification |
 
 ## Authentication
 
-The server uses a fingerprint-based ownership verification system. When creating a request, the user's fingerprint is stored with the request. For delete operations, the fingerprint is verified to ensure only the creator can modify their requests.
+The API uses a simple ownership verification system. When creating a team request, a fingerprint is stored with the request. For update and delete operations, this fingerprint must be provided to verify ownership.
 
 ## Data Storage
 

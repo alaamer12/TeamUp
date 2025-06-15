@@ -3,7 +3,12 @@ const cors = require('cors');
 const morgan = require('morgan');
 const { v4: uuidv4 } = require('uuid');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const path = require('path');
+
+const nodeEnv = process.env.NODE_ENV || 'development';
+require('dotenv').config({
+  path: path.resolve(__dirname, `../.env.${nodeEnv}`),
+});
 
 // Initialize Express app
 const app = express();

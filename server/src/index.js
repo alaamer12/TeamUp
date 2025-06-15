@@ -2,98 +2,146 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Data storage path
-const DATA_DIR = path.join(__dirname, '../data');
-const REQUESTS_FILE = path.join(DATA_DIR, 'requests.json');
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-// Initialize requests file if it doesn't exist
-if (!fs.existsSync(REQUESTS_FILE)) {
-  fs.writeFileSync(REQUESTS_FILE, JSON.stringify([], null, 2));
-}
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Helper functions for data operations
-const readRequests = () => {
-  try {
-    const data = fs.readFileSync(REQUESTS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading requests:', error);
-    return [];
-  }
-};
-
-const writeRequests = (data) => {
-  try {
-    fs.writeFileSync(REQUESTS_FILE, JSON.stringify(data, null, 2));
-    return true;
-  } catch (error) {
-    console.error('Error writing requests:', error);
-    return false;
-  }
-};
-
 // API Routes
-app.get('/api/requests', (req, res) => {
-  const requests = readRequests();
-  res.json(requests);
+app.get('/api/requests', async (req, res) => {
+  try {
+    // Get all requests
+    const { data: requests, error: requestsError } = await supabase
+      .from('requests')
+      .select('*');
+    
+    if (requestsError) throw requestsError;
+    
+    // For each request, get the team members
+    const requestsWithMembers = await Promise.all(
+      requests.map(async (request) => {
+        const { data: members, error: membersError } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq('request_id', request.id);
+        
+        if (membersError) {
+          console.error(`Error fetching members for request ${request.id}:`, membersError);
+          return { ...request, members: [] };
+        }
+        
+        return { ...request, members: members || [] };
+      })
+    );
+    
+    res.json(requestsWithMembers);
+  } catch (error) {
+    console.error('Error fetching requests:', error);
+    res.status(500).json({ error: 'Failed to fetch requests' });
+  }
 });
 
-app.post('/api/requests', (req, res) => {
+app.post('/api/requests', async (req, res) => {
   try {
-    const requests = readRequests();
+    // Extract team members and camelCase fields from request data
+    const { 
+      members, 
+      ownerFingerprint, 
+      contactEmail, 
+      contactDiscord, 
+      groupSize,
+      ...requestFields 
+    } = req.body;
+    
+    // Create the main request with proper snake_case field names
     const newRequest = {
       id: uuidv4(),
-      ...req.body,
-      createdAt: new Date().toISOString()
+      ...requestFields,
+      // Handle both camelCase and snake_case versions
+      owner_fingerprint: ownerFingerprint || requestFields.owner_fingerprint,
+      contact_email: contactEmail || requestFields.contact_email,
+      contact_discord: contactDiscord || requestFields.contact_discord,
+      group_size: groupSize || requestFields.group_size,
+      created_at: new Date().toISOString()
     };
     
-    requests.push(newRequest);
-    writeRequests(requests);
+    // Insert the request
+    const { data: createdRequest, error: requestError } = await supabase
+      .from('requests')
+      .insert([newRequest])
+      .select();
     
-    res.status(201).json(newRequest);
+    if (requestError) throw requestError;
+    
+    // If members are provided, add them to the team_members table
+    if (members && Array.isArray(members) && members.length > 0) {
+      const teamMembers = members.map(member => ({
+        request_id: newRequest.id,
+        tech_field: member.tech_field || null,
+        gender: member.gender || null,
+        major: member.major || null, 
+        planguage: member.planguage || null,
+        already_know: member.already_know || false
+      }));
+      
+      const { error: membersError } = await supabase
+        .from('team_members')
+        .insert(teamMembers);
+      
+      if (membersError) {
+        console.error('Error adding team members:', membersError);
+        // Continue despite error with members
+      }
+    }
+    
+    // Return the created request
+    res.status(201).json(createdRequest[0]);
   } catch (error) {
     console.error('Error creating request:', error);
     res.status(500).json({ error: 'Failed to create request' });
   }
 });
 
-app.delete('/api/requests/:id', (req, res) => {
+app.delete('/api/requests/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { ownerFingerprint } = req.body;
-    let requests = readRequests();
     
-    const request = requests.find(request => request.id === id);
+    // First check if request exists and belongs to user
+    const { data: request, error: fetchError } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (!request) {
+    if (fetchError) {
       return res.status(404).json({ error: 'Request not found' });
     }
     
     // Check ownership
-    if (request.ownerFingerprint !== ownerFingerprint) {
+    if (request.owner_fingerprint !== ownerFingerprint) {
       return res.status(403).json({ error: 'Not authorized to delete this request' });
     }
     
-    // Delete the request
-    requests = requests.filter(request => request.id !== id);
-    writeRequests(requests);
+    // Delete the request - this will cascade delete the team members due to the foreign key constraint
+    const { error: deleteError } = await supabase
+      .from('requests')
+      .delete()
+      .eq('id', id);
+    
+    if (deleteError) throw deleteError;
     
     res.json({ message: 'Request deleted successfully' });
   } catch (error) {
@@ -102,36 +150,96 @@ app.delete('/api/requests/:id', (req, res) => {
   }
 });
 
-app.put('/api/requests/:id', (req, res) => {
+app.put('/api/requests/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedData = req.body;
-    let requests = readRequests();
+    // Extract members, camelCase fields from the request
+    const { 
+      members, 
+      ownerFingerprint, 
+      contactEmail, 
+      contactDiscord, 
+      groupSize,
+      ...updatedFields 
+    } = req.body;
     
-    const requestIndex = requests.findIndex(request => request.id === id);
+    // First check if request exists and belongs to user
+    const { data: request, error: fetchError } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (requestIndex === -1) {
+    if (fetchError) {
       return res.status(404).json({ error: 'Request not found' });
     }
     
     // Check ownership
-    if (requests[requestIndex].ownerFingerprint !== updatedData.ownerFingerprint) {
+    if (request.owner_fingerprint !== ownerFingerprint) {
       return res.status(403).json({ error: 'Not authorized to update this request' });
     }
     
-    // Update the request while preserving id, createdAt and ownerFingerprint
+    // Update the request with proper snake_case field names
     const updatedRequest = {
-      ...updatedData,
-      id: requests[requestIndex].id,
-      createdAt: requests[requestIndex].createdAt,
-      ownerFingerprint: requests[requestIndex].ownerFingerprint,
-      updatedAt: new Date().toISOString()
+      ...updatedFields,
+      id: request.id,
+      created_at: request.created_at,
+      owner_fingerprint: request.owner_fingerprint,
+      contact_email: contactEmail || updatedFields.contact_email,
+      contact_discord: contactDiscord || updatedFields.contact_discord,
+      group_size: groupSize || updatedFields.group_size,
+      updated_at: new Date().toISOString()
     };
     
-    requests[requestIndex] = updatedRequest;
-    writeRequests(requests);
+    const { data, error } = await supabase
+      .from('requests')
+      .update(updatedRequest)
+      .eq('id', id)
+      .select();
     
-    res.json(updatedRequest);
+    if (error) throw error;
+    
+    // Handle team members if provided
+    if (members && Array.isArray(members)) {
+      // First delete existing members
+      const { error: deleteError } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('request_id', id);
+      
+      if (deleteError) {
+        console.error('Error deleting team members:', deleteError);
+      }
+      
+      // Then add new members if any
+      if (members.length > 0) {
+        const teamMembers = members.map(member => ({
+          request_id: id,
+          tech_field: member.tech_field || null,
+          gender: member.gender || null,
+          major: member.major || null,
+          planguage: member.planguage || null,
+          already_know: member.already_know || false
+        }));
+        
+        const { error: membersError } = await supabase
+          .from('team_members')
+          .insert(teamMembers);
+        
+        if (membersError) {
+          console.error('Error updating team members:', membersError);
+        }
+      }
+    }
+    
+    // Get updated team members
+    const { data: updatedMembers } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq('request_id', id);
+    
+    // Return the updated request with members
+    res.json({ ...data[0], members: updatedMembers || [] });
   } catch (error) {
     console.error('Error updating request:', error);
     res.status(500).json({ error: 'Failed to update request' });

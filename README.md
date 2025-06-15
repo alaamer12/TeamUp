@@ -102,6 +102,18 @@ TeamUp provides a RESTful API for team request management:
 
 For more details, see the [Server README](./server/README.md).
 
+## Vercel Deployment Commands
+As you've noted, to deploy your projects to production on Vercel, you should use the following commands:
+- For the frontend (from the project root):
+  ```bash
+  vercel --prod
+  ```
+- For the backend (from the server directory):
+ ```bash
+ cd server
+ vercel --prod
+ ```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

@@ -8,11 +8,14 @@ const DEV_API_URLS = [
   'http://localhost:3000/api'
 ];
 
-// Production API URL 
-const PROD_API_URL = 'https://teamup-backend.vercel.app/api';
+// Production API URL - use environment variable if available, otherwise use default
+const PROD_API_URL = import.meta.env.VITE_API_URL || 'https://teamup-server.vercel.app/api';
 
 // Use production URL in production, fallback to dev URLs in development
 const API_URL = import.meta.env.PROD ? PROD_API_URL : DEV_API_URLS[0];
+
+// Log the API URL being used (helpful for debugging)
+console.log(`Using API URL: ${API_URL} (${import.meta.env.PROD ? 'production' : 'development'} mode)`);
 
 /**
  * Fetch with appropriate API URL based on environment
@@ -22,17 +25,22 @@ const API_URL = import.meta.env.PROD ? PROD_API_URL : DEV_API_URLS[0];
  */
 async function fetchApi(endpoint, options = {}) {
   try {
-    // Use production URL in production
-    if (import.meta.env.PROD) {
-      const response = await fetch(`${API_URL}${endpoint}`, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+    // Always use the configured API URL
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      // Add CORS mode to ensure proper cross-origin requests
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        ...options.headers,
+        'Content-Type': 'application/json',
       }
-      return response;
-    }
+    });
     
-    // Try development URLs with fallback in development
-    return await fetchWithFallback(endpoint, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    return response;
   } catch (error) {
     console.error('API request failed:', error);
     throw error;

@@ -12,12 +12,64 @@ const PORT = process.env.PORT || 8080;
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase credentials. Make sure SUPABASE_URL and SUPABASE_ANON_KEY are set in your environment.');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Configure CORS - simplified for Vercel deployment
+// In production on Vercel, we need a simpler CORS setup
+app.use(cors({
+  origin: '*', // Allow all origins in production for now
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Log CORS configuration
+console.log('CORS configured to allow all origins');
+
+// Add middleware to handle OPTIONS requests for CORS preflight
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.status(200).send();
+});
+
+// Add manual CORS headers middleware for all routes
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
+
 // Middleware
-app.use(cors());
 app.use(express.json());
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV || 'development' });
+});
+
+// Root route handler
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'TeamUp API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      requests: '/api/requests'
+    },
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // API Routes
 app.get('/api/requests', async (req, res) => {
@@ -248,5 +300,5 @@ app.put('/api/requests/:id', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 }); 

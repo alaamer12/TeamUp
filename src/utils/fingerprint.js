@@ -24,17 +24,22 @@ export function generateFingerprint() {
       hash = hash & hash; // Convert to 32-bit integer
     }
     
-    return Math.abs(hash).toString(36);
+    // Always return as string with fixed length
+    return Math.abs(hash).toString(36).padStart(10, '0');
   } catch (error) {
-    // Fallback to a simpler fingerprinting method if the primary one fails
+    // Fallback to a simpler fingerprinting method that's still consistent
     console.warn("Fingerprinting encountered an error, using fallback method");
-    const simpleFingerprint = [
-      Date.now(),
-      Math.random().toString(36).substring(2),
-      navigator.userAgent?.substring(0, 20) || 'unknown'
-    ].join('-');
     
-    return simpleFingerprint;
+    // Create a simpler but consistent fingerprint
+    const userAgentHash = navigator.userAgent ? 
+      navigator.userAgent.split('').reduce((acc, char) => (acc + char.charCodeAt(0)), 0) % 10000 : 
+      Math.floor(Math.random() * 10000);
+    
+    const now = Date.now();
+    const timeComponent = (now % 1000000).toString().padStart(6, '0');
+    const fingerprint = `fp-${timeComponent}-${userAgentHash.toString().padStart(4, '0')}`;
+    
+    return fingerprint;
   }
 }
 

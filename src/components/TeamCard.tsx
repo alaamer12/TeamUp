@@ -26,7 +26,19 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
 
   const handleDelete = async () => {
     try {
-      await deleteTeamRequest(team.id, currentFingerprint);
+      // Use the fingerprint from the team data if available (for backward compatibility)
+      const fingerprint = team.ownerFingerprint || team.owner_fingerprint || currentFingerprint;
+      
+      // Log the fingerprints being used (for debugging)
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('Delete request fingerprints:', {
+          current: currentFingerprint,
+          team: team.ownerFingerprint || team.owner_fingerprint,
+          using: fingerprint
+        });
+      }
+      
+      await deleteTeamRequest(team.id, fingerprint);
       toast({
         title: "Team request deleted",
         description: "Your team request has been removed successfully."
@@ -34,6 +46,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
       onUpdate();
       setDeleteDialogOpen(false);
     } catch (error) {
+      console.error('Delete error:', error);
       toast({
         title: "Error",
         description: "Failed to delete team request.",
@@ -43,7 +56,12 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
   };
 
   const handleEdit = () => {
-    navigate('/', { state: { editMode: true, teamData: team } });
+    // Pass the correct fingerprint when editing
+    const teamWithFingerprint = {
+      ...team,
+      ownerFingerprint: team.ownerFingerprint || team.owner_fingerprint || currentFingerprint
+    };
+    navigate('/', { state: { editMode: true, teamData: teamWithFingerprint } });
   };
 
   const handleWhatsAppContact = () => {

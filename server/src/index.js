@@ -181,7 +181,15 @@ app.post('/api/requests', async (req, res) => {
 app.delete('/api/requests/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { ownerFingerprint } = req.body;
+    // Accept both camelCase and snake_case versions for backward compatibility
+    const ownerFingerprint = req.body.ownerFingerprint || req.body.owner_fingerprint;
+    
+    // Log the fingerprint being used (for debugging)
+    console.log(`Delete request for ${id} with fingerprint: ${ownerFingerprint ? ownerFingerprint.substring(0, 10) + '...' : 'undefined'}`);
+    
+    if (!ownerFingerprint) {
+      return res.status(400).json({ error: 'Owner fingerprint is required' });
+    }
     
     // First check if request exists and belongs to user
     const { data: request, error: fetchError } = await supabase
@@ -193,6 +201,13 @@ app.delete('/api/requests/:id', async (req, res) => {
     if (fetchError) {
       return res.status(404).json({ error: 'Request not found' });
     }
+    
+    // Log the comparison (for debugging)
+    console.log('Ownership check:', {
+      provided: ownerFingerprint,
+      stored: request.owner_fingerprint,
+      match: request.owner_fingerprint === ownerFingerprint
+    });
     
     // Check ownership
     if (request.owner_fingerprint !== ownerFingerprint) {
@@ -220,12 +235,23 @@ app.put('/api/requests/:id', async (req, res) => {
     // Extract members, camelCase fields from the request
     const { 
       members, 
-      ownerFingerprint, 
+      ownerFingerprint: reqOwnerFingerprint, 
+      owner_fingerprint: reqOwnerFingerprintSnake,
       contactEmail, 
       contactDiscord, 
       groupSize,
       ...updatedFields 
     } = req.body;
+    
+    // Use either camelCase or snake_case version
+    const ownerFingerprint = reqOwnerFingerprint || reqOwnerFingerprintSnake;
+    
+    // Log the fingerprint being used (for debugging)
+    console.log(`Update request for ${id} with fingerprint: ${ownerFingerprint ? ownerFingerprint.substring(0, 10) + '...' : 'undefined'}`);
+    
+    if (!ownerFingerprint) {
+      return res.status(400).json({ error: 'Owner fingerprint is required' });
+    }
     
     // First check if request exists and belongs to user
     const { data: request, error: fetchError } = await supabase
@@ -237,6 +263,13 @@ app.put('/api/requests/:id', async (req, res) => {
     if (fetchError) {
       return res.status(404).json({ error: 'Request not found' });
     }
+    
+    // Log the comparison (for debugging)
+    console.log('Ownership check for update:', {
+      provided: ownerFingerprint,
+      stored: request.owner_fingerprint,
+      match: request.owner_fingerprint === ownerFingerprint
+    });
     
     // Check ownership
     if (request.owner_fingerprint !== ownerFingerprint) {

@@ -285,76 +285,78 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t mt-4">
+            <div className="flex flex-wrap items-center gap-2 pt-4 border-t mt-4">
               {isAdmin && (
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs mr-2">
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs">
                   Admin Mode
                 </Badge>
               )}
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={handleWhatsAppContact}
-                    className="flex-1 mr-2 bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    {t('teamcard.contact_whatsapp')}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t('teamcard.contact_tooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
+              <div className="flex flex-1 gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={handleWhatsAppContact}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      {t('teamcard.contact_whatsapp')}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('teamcard.contact_tooltip')}</p>
+                  </TooltipContent>
+                </Tooltip>
 
-              {canModify && (
-                <div className="flex space-x-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={handleEdit}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('teamcard.edit')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                {canModify && (
+                  <div className="flex space-x-2">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
+                        <Button variant="outline" size="sm" onClick={handleEdit}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{t('teamcard.delete')}</p>
+                        <p>{t('teamcard.edit')}</p>
                       </TooltipContent>
                     </Tooltip>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>{isAdmin ? "Admin: Delete Team Request" : t('teamcard.delete_title')}</DialogTitle>
-                        <DialogDescription>
-                          {isAdmin 
-                            ? "As an admin, you are about to delete someone else's team request. This action cannot be undone."
-                            : t('teamcard.delete_description')
-                          }
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                          {t('teamcard.cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
-                          {t('teamcard.confirm_delete')}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
+                    
+                    <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{t('teamcard.delete')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>{isAdmin ? "Admin: Delete Team Request" : t('teamcard.delete_title')}</DialogTitle>
+                          <DialogDescription>
+                            {isAdmin 
+                              ? "As an admin, you are about to delete someone else's team request. This action cannot be undone."
+                              : t('teamcard.delete_description')
+                            }
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                            {t('teamcard.cancel')}
+                          </Button>
+                          <Button variant="destructive" onClick={handleDelete}>
+                            {t('teamcard.confirm_delete')}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

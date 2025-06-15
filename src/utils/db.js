@@ -1,4 +1,4 @@
-import { get, set, del } from 'idb-keyval';
+import { get, set } from 'idb-keyval';
 import { createTeamRequest, fetchTeamRequests, deleteTeamRequest as apiDeleteTeamRequest, updateTeamRequest as apiUpdateTeamRequest } from './api-client';
 import { v4 as uuidv4 } from 'uuid';
 

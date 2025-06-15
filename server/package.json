@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend server for TeamUp application",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "start": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",

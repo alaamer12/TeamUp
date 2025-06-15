@@ -1,12 +1,19 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const { v4: uuidv4 } = require('uuid');
-const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import { v4 as uuidv4 } from 'uuid';
+import { createClient } from '@supabase/supabase-js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const nodeEnv = process.env.NODE_ENV || 'development';
-require('dotenv').config({
+
+dotenv.config({
   path: path.resolve(__dirname, `../.env.${nodeEnv}`),
 });
 

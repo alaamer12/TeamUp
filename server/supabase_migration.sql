@@ -39,13 +39,13 @@ ALTER TABLE public.requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 
 -- Create policy to allow full access to requests
-CREATE POLICY IF NOT EXISTS "Allow public access to requests" 
+CREATE POLICY "Allow public access to requests" 
   ON public.requests FOR ALL 
   USING (true) 
   WITH CHECK (true);
 
 -- Create policy to allow full access to team_members
-CREATE POLICY IF NOT EXISTS "Allow public access to team_members" 
+CREATE POLICY "Allow public access to team_members" 
   ON public.team_members FOR ALL 
   USING (true) 
   WITH CHECK (true); 

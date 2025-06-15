@@ -1,122 +1,81 @@
-# TeamUp
+# TeamUp - Graduation Project Team Formation Platform
 
 <div align="center">
   <img src="public/teamup-banner.svg" alt="TeamUp Banner" width="800">
 </div>
 
-TeamUp is a professional platform designed to connect developers, designers, and innovators to collaborate on exciting projects. Whether you're looking for a team to join or seeking talented individuals to complete your project, TeamUp provides the tools to make meaningful connections.
+TeamUp is a specialized platform designed to help students find teammates for their graduation projects. It connects developers, designers, and innovators based on skills, interests, and project requirements, making team formation easier and more efficient.
 
-## Features
+## Project Purpose
 
-- **Team Discovery**: Browse through a diverse range of teams and projects looking for collaborators.
-- **Advanced Search**: Filter teams by skills, project type, and availability to find the perfect match.
-- **Team Requests**: Send and manage requests to join teams you're interested in.
-- **Direct Communication**: Connect with team leaders and members to discuss project details.
-- **Profile Management**: Showcase your skills, experience, and portfolio to attract potential collaborators.
-- **Team Request Creation**: Create detailed team requests specifying the skills and qualifications you're looking for.
-- **Team Request Management**: Edit or delete your team requests as your needs change.
-- **Advanced Search**: Find potential teammates based on skills, major, and technical fields.
-- **Direct Communication**: Connect directly with team creators via WhatsApp integration.
-- **Offline Support**: Continue using the application even when offline, with data syncing when connection is restored.
+Finding the right teammates for graduation projects can be challenging. TeamUp solves this problem by:
 
-## Project Architecture
+- Allowing students to create team requests specifying exactly what skills they need
+- Enabling students to browse existing teams looking for specific roles
+- Facilitating direct communication between potential teammates
+- Providing a structured way to form balanced, complementary teams
 
-The project is structured as follows:
+## Project Structure
 
-- **Frontend**: Built with React and TypeScript, providing a responsive and intuitive user interface.
-- **Backend**: Express.js server handling API requests and data management.
-- **Data Storage**: JSON-based storage for demonstration purposes.
+This repository is organized as a full-stack application:
 
-## Technology Stack
+- **Frontend**: React application with TypeScript, Vite, and Tailwind CSS
+- **Backend**: Express.js API server with Supabase integration for data storage
 
-### Frontend
-- React with TypeScript
-- Vite for build tooling
-- React Router for navigation
-- Tailwind CSS for styling
-
-### Backend
-- Express.js
-- Node.js
-- Morgan for request logging
-- CORS support
-
-## Getting Started
-
-### Quick Start
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/teamup.git
-cd teamup
-
 # Install dependencies
 npm install
 
-# Start both frontend and backend
+# Run in development mode
 npm run dev
+
+# Build for production
+npm run build
 ```
 
-### Manual Setup
+### Prerequisites
 
-1. **Setup Frontend**
+- Node.js (v18 or newer)
+- npm or bun
+- Supabase account (for database access)
 
-```bash
-# Install frontend dependencies
-npm install
+## Features
 
-# Start frontend development server
-npm run dev:frontend
-```
+- **Team Discovery**: Browse through available team requests filtered by skills and requirements
+- **Advanced Search**: Find potential teammates based on technical skills, major, and programming languages
+- **Team Requests**: Create detailed team requests specifying exactly what skills you need
+- **Team Management**: Edit or delete your team requests as your requirements change
+- **Direct Communication**: Connect directly with team creators via WhatsApp integration
+- **Offline Support**: Continue using the application even when offline, with data syncing when connection is restored
+- **Browser Fingerprinting**: Secure ownership of team requests without requiring account creation
 
-2. **Setup Backend**
+## Architecture
 
-```bash
-# Navigate to server directory
-cd server
+The application follows a modern web architecture:
 
-# Install backend dependencies
-npm install
+- **Frontend**: React with TypeScript, using Shadcn UI components and Tailwind CSS
+- **Backend**: Express.js server handling API requests and business logic
+- **Database**: Supabase (PostgreSQL) for secure and scalable data storage
+- **State Management**: Context API and custom hooks for frontend state
+- **Offline Support**: IndexedDB for local data persistence
 
-# Start backend server
-npm run dev
-```
+## Documentation
 
-## How It Works
+Comprehensive documentation is available in the docs directory:
 
-1. **Browse Teams**: Explore available teams and projects on the Listings page.
-2. **Send Request**: When you find a team you'd like to join, send a request with your information.
-3. **Manage Requests**: Track the status of your requests in the Dashboard.
-4. **Connect**: Once accepted, connect with your new team and start collaborating!
+- [Frontend Documentation](./README_FRONTEND.md) - Details about the frontend architecture and components
+- [Deployment Guides](./docs/) - Step-by-step deployment instructions
+  - [Frontend Deployment](./docs/FRONT_DEPLOYMENT.md)
+  - [Backend Deployment](./docs/BACK_DEPLOYMENT.md)
+- [Changelog](./docs/CHANGELOG.md) - Version history and updates
 
-## API Documentation
+## Security Features
 
-TeamUp provides a RESTful API for team request management:
-
-| Method | Endpoint | Description | Authentication |
-|--------|----------|-------------|----------------|
-| GET | `/api/requests` | Get all team requests | None |
-| POST | `/api/requests` | Create a new team request | None |
-| PUT | `/api/requests/:id` | Update an existing team request | Ownership verification |
-| DELETE | `/api/requests/:id` | Delete a team request | Ownership verification |
-
-For more details, see the [Server README](./server/README.md).
-
-## Vercel Deployment Commands
-As you've noted, to deploy your projects to production on Vercel, you should use the following commands:
-- For the frontend (from the project root):
-  ```bash
-  vercel --prod
-  ```
-- For the backend (from the server directory):
- ```bash
- cd server
- vercel --prod
- ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- **Browser Fingerprinting**: Secure ownership verification without user accounts
+- **Admin Mode**: Hidden admin functionality for moderation (Ctrl+Shift+A)
+- **Data Protection**: Minimal personal data collection and secure storage
 
 ## License
 

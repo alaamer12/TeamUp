@@ -6,7 +6,8 @@ This document provides instructions for deploying the TeamUp frontend to Vercel.
 
 - A [Vercel](https://vercel.com) account
 - [Vercel CLI](https://vercel.com/docs/cli) installed (optional, for local testing)
-- The backend already deployed (see `server/DEPLOYMENT.md`)
+- The backend already deployed (see [Backend Deployment Guide](./BACK_DEPLOYMENT.md))
+- A Supabase project set up (see [Backend Deployment Guide](./BACK_DEPLOYMENT.md) for details)
 
 ## Environment Variables
 
@@ -16,7 +17,8 @@ The following environment variables need to be set in your Vercel project:
 |----------|-------------|
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Your Supabase anonymous key |
-| `VITE_API_URL` | Your deployed backend API URL (e.g., `https://teamup-backend.vercel.app/api`) |
+| `VITE_API_URL` | Your deployed backend API URL (e.g., `https://teamup-server.vercel.app/api`) |
+| `VITE_ADMIN_PASSWORD` | Secret password for admin access (via Ctrl+Shift+A) |
 
 ## Deployment Steps
 
@@ -41,13 +43,26 @@ The following environment variables need to be set in your Vercel project:
    cd /path/to/teamup
    ```
 
-2. Deploy to Vercel:
+2. Create a `.vercel.json` file with your project configuration:
+   ```json
+   {
+     "buildCommand": "npm run build",
+     "outputDirectory": "dist",
+     "devCommand": "npm run dev",
+     "framework": "vite",
+     "rewrites": [
+       { "source": "/(.*)", "destination": "/index.html" }
+     ]
+   }
+   ```
+
+3. Deploy to Vercel:
    ```bash
    vercel
    ```
 
-3. Follow the prompts to configure your project
-4. To deploy to production:
+4. Follow the prompts to configure your project
+5. To deploy to production:
    ```bash
    vercel --prod
    ```
@@ -60,10 +75,15 @@ After deployment, you can verify that the frontend is working by visiting your V
 
 Make sure the backend is properly deployed and that the `VITE_API_URL` environment variable is set correctly to point to your backend API.
 
+## Admin Access
+
+The admin mode can be accessed by pressing `Ctrl+Shift+A` on any page. This will open a password prompt. Enter the password set in the `VITE_ADMIN_PASSWORD` environment variable to gain admin privileges.
+
 ## Troubleshooting
 
 - **API Connection Issues**: Verify that the `VITE_API_URL` is correct and that the backend is running
 - **Supabase Connection Issues**: Verify that the Supabase URL and key are correct
-- **CORS Issues**: Make sure your frontend URL is included in the `ALLOWED_ORIGINS` environment variable in the backend deployment
+- **CORS Issues**: Make sure your frontend URL is included in the allowed origins in the backend configuration
 - **Build Errors**: Check the build logs in the Vercel dashboard for any errors during the build process
-- **Routing Issues**: If you encounter 404 errors on page refresh, make sure the Vercel configuration has the proper rewrites/redirects to handle client-side routing 
+- **Routing Issues**: If you encounter 404 errors on page refresh, make sure the Vercel configuration has the proper rewrites to handle client-side routing
+- **TypeScript Errors**: If you encounter TypeScript compilation errors, make sure all dependencies are correctly installed and types are properly defined 

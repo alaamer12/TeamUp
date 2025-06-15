@@ -8,7 +8,7 @@ import Landing from "./pages/Landing";
 import Listings from "./pages/Listings";
 import About from "./pages/About";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { AdminProvider } from "./hooks/useAdminMode.tsx";
+import { AdminProvider, useAdminMode } from "./hooks/useAdminMode.tsx";
 import AdminModal from "./components/AdminModal.tsx";
 import "./styles/globals.css";
 
@@ -16,19 +16,29 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const { isAdmin, deactivateAdmin } = useAdminMode();
   
   // Handle keyboard shortcut for admin mode
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      // Check for Ctrl+Shift+A
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl+Shift+A to activate
       if (event.ctrlKey && event.shiftKey && event.key === 'A') {
+        event.preventDefault();
         setAdminModalOpen(true);
+      }
+      
+      // Check for Ctrl+Shift+D to deactivate
+      if (event.ctrlKey && event.shiftKey && event.key === 'D') {
+        event.preventDefault();
+        if (isAdmin) {
+          deactivateAdmin();
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [isAdmin, deactivateAdmin]);
   
   return (
     <TooltipProvider>

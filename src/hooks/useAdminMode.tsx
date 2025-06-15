@@ -1,4 +1,5 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useRef } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 // Define types for the context
 interface AdminContextType {
@@ -21,16 +22,49 @@ interface AdminProviderProps {
   children: ReactNode;
 }
 
+const ADMIN_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
 // Provider component
 export function AdminProvider({ children }: AdminProviderProps) {
   const [isAdmin, setIsAdmin] = useState(false);
-  
-  // Check if admin mode was previously activated in this session
+  const adminTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const deactivateAdmin = (): void => {
+    setIsAdmin(false);
+    sessionStorage.removeItem('teamup-admin-mode');
+    sessionStorage.removeItem('teamup-admin-timestamp');
+    if (adminTimeoutRef.current) {
+      clearTimeout(adminTimeoutRef.current);
+    }
+    toast({
+      title: "Admin Mode Deactivated",
+      description: "You no longer have privileged access.",
+    });
+  };
+
+  // Check if admin mode was previously activated and if it has expired
   useEffect(() => {
     const adminStatus = sessionStorage.getItem('teamup-admin-mode');
-    if (adminStatus === 'active') {
-      setIsAdmin(true);
+    const adminTimestamp = sessionStorage.getItem('teamup-admin-timestamp');
+    
+    if (adminStatus === 'active' && adminTimestamp) {
+      const timeElapsed = Date.now() - parseInt(adminTimestamp, 10);
+      
+      if (timeElapsed < ADMIN_TIMEOUT) {
+        setIsAdmin(true);
+        const remainingTime = ADMIN_TIMEOUT - timeElapsed;
+        adminTimeoutRef.current = setTimeout(deactivateAdmin, remainingTime);
+      } else {
+        deactivateAdmin();
+      }
     }
+    
+    // Cleanup timeout on component unmount
+    return () => {
+      if (adminTimeoutRef.current) {
+        clearTimeout(adminTimeoutRef.current);
+      }
+    };
   }, []);
   
   // Verify admin password
@@ -50,15 +84,16 @@ export function AdminProvider({ children }: AdminProviderProps) {
     if (verifyPassword(password)) {
       setIsAdmin(true);
       sessionStorage.setItem('teamup-admin-mode', 'active');
+      sessionStorage.setItem('teamup-admin-timestamp', Date.now().toString());
+      
+      if (adminTimeoutRef.current) {
+        clearTimeout(adminTimeoutRef.current);
+      }
+      adminTimeoutRef.current = setTimeout(deactivateAdmin, ADMIN_TIMEOUT);
+      
       return true;
     }
     return false;
-  };
-  
-  // Deactivate admin mode
-  const deactivateAdmin = (): void => {
-    setIsAdmin(false);
-    sessionStorage.removeItem('teamup-admin-mode');
   };
   
   return (

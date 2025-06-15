@@ -185,14 +185,6 @@ const About = () => {
                       {t('about.direct_comm_description')}
                     </p>
                   </div>
-                  <div className="md:col-span-2">
-                    <h4 className="font-semibold mb-2">Supabase Database</h4>
-                    <p className="text-sm text-muted-foreground">
-                      We use Supabase, a secure PostgreSQL database service, to store team requests and member information. 
-                      All data is encrypted in transit and at rest. We implement row-level security policies to ensure 
-                      data can only be accessed by authorized users. Your information is never sold or shared with third parties.
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>

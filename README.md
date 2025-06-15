@@ -6,6 +6,16 @@
 
 TeamUp is a specialized platform designed to help students find teammates for their graduation projects. It connects developers, designers, and innovators based on skills, interests, and project requirements, making team formation easier and more efficient.
 
+## Screenshots
+
+<div align="center">
+  <h3>Landing Page</h3>
+  <img src="public/screenshoots/land-screen.PNG" alt="Landing Page" width="800">
+  
+  <h3>Team Requests</h3>
+  <img src="public/screenshoots/card-screen.PNG" alt="Team Requests" width="800">
+</div>
+
 ## Project Purpose
 
 Finding the right teammates for graduation projects can be challenging. TeamUp solves this problem by:
@@ -45,6 +55,8 @@ npm run build
 
 - **Team Discovery**: Browse through available team requests filtered by skills and requirements
 - **Advanced Search**: Find potential teammates based on technical skills, major, and programming languages
+- **Multi-language Support**: Full interface translation for both English and Arabic
+- **Dark/Light Theme**: Switch between dark and light mode for comfortable viewing
 - **Team Requests**: Create detailed team requests specifying exactly what skills you need
 - **Team Management**: Edit or delete your team requests as your requirements change
 - **Direct Communication**: Connect directly with team creators via WhatsApp integration
@@ -66,9 +78,9 @@ The application follows a modern web architecture:
 Comprehensive documentation is available in the docs directory:
 
 - [Frontend Documentation](./README_FRONTEND.md) - Details about the frontend architecture and components
-- [Deployment Guides](./docs/) - Step-by-step deployment instructions
-  - [Frontend Deployment](./docs/FRONT_DEPLOYMENT.md)
-  - [Backend Deployment](./docs/BACK_DEPLOYMENT.md)
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Complete deployment instructions
+  - [Frontend Deployment](./docs/FRONT_DEPLOYMENT.md) - Frontend-specific deployment details
+  - [Backend Deployment](./docs/BACK_DEPLOYMENT.md) - Backend-specific deployment details
 - [Changelog](./docs/CHANGELOG.md) - Version history and updates
 
 ## Security Features

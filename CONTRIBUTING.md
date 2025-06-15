@@ -53,20 +53,6 @@ Example: `feat: add team search functionality`
 4. Submit your PR against the `develop` branch
 5. Wait for code review and address any feedback
 
-## Code Style
-
-- Follow the existing code style
-- Use TypeScript for type safety
-- Write tests for new functionality
-- Document public functions with JSDoc comments
-
-## Testing
-
-Run tests with:
-
-```bash
-npm test
-```
 
 ## License
 

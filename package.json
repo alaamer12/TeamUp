@@ -13,7 +13,10 @@
     "preview": "vite preview",
     "server:start": "cd server && npm run start",
     "server:install": "cd server && npm install",
-    "setup": "npm install && npm run server:install"
+    "setup": "npm install && npm run server:install",
+    "vercel:backend": "cd server && vercel --prod",
+    "vercel:frontend": "vercel --prod",
+    "vercel:all": "npm run \"vercel:backend\" && npm run \"vercel:frontend\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

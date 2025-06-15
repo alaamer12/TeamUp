@@ -29,3 +29,11 @@ dist-ssr
 .env
 .env.*
 !/.env.example
+
+# Environment variables
+.env*.local
+.env.development
+.env.production
+
+# Environment variables example
+!.env.example

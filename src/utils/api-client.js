@@ -2,20 +2,11 @@
  * API client for communicating with the backend server
  */
 
-// Development API URLs (local)
-const DEV_API_URLS = [
-  'http://localhost:8080/api',
-  'http://localhost:3000/api'
-];
-
 // Production API URL - use environment variable if available, otherwise use default
-const PROD_API_URL = import.meta.env.VITE_API_URL || 'https://teamup-server.vercel.app/api';
-
-// Use production URL in production, fallback to dev URLs in development
-const API_URL = import.meta.env.PROD ? PROD_API_URL : DEV_API_URLS[0];
+const API_URL = import.meta.env.VITE_API_URL || 'https://teamup-server.vercel.app/api';
 
 // Log the API URL being used (helpful for debugging)
-console.log(`Using API URL: ${API_URL} (${import.meta.env.PROD ? 'production' : 'development'} mode)`);
+console.log(`Using API URL: ${API_URL} (${import.meta.env.MODE} mode)`);
 
 /**
  * Fetch with appropriate API URL based on environment
@@ -54,22 +45,16 @@ async function fetchApi(endpoint, options = {}) {
  * @returns {Promise<Response>} Fetch response
  */
 async function fetchWithFallback(endpoint, options = {}) {
-  let lastError;
-  
-  for (const baseUrl of DEV_API_URLS) {
-    try {
-      const response = await fetch(`${baseUrl}${endpoint}`, options);
-      if (response.ok) {
-        return response;
-      }
-      lastError = new Error(`HTTP error ${response.status}`);
-    } catch (error) {
-      lastError = error;
-      // Continue to next URL
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, options);
+    if (response.ok) {
+      return response;
     }
+    throw new Error(`HTTP error ${response.status}`);
+  } catch (error) {
+    console.error('Failed to connect to the API endpoint:', error);
+    throw error;
   }
-  
-  throw lastError || new Error('Failed to connect to any API endpoint');
 }
 
 /**

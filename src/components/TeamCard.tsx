@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "./LanguageProvider";
+import { useAdminMode } from "../hooks/useAdminMode";
 
 interface TeamCardProps {
   team: any;
@@ -21,27 +22,35 @@ interface TeamCardProps {
 const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
   const navigate = useNavigate();
   const { isOwner, currentFingerprint } = useCardOwnership(team);
+  const { isAdmin } = useAdminMode();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { t } = useLanguage();
+
+  // Check if user can edit/delete (either owner or admin)
+  const canModify = isOwner || isAdmin;
 
   const handleDelete = async () => {
     try {
       // Use the fingerprint from the team data if available (for backward compatibility)
-      const fingerprint = team.ownerFingerprint || team.owner_fingerprint || currentFingerprint;
+      // If in admin mode, use the team's owner fingerprint directly
+      const fingerprint = isAdmin 
+        ? (team.ownerFingerprint || team.owner_fingerprint) 
+        : (team.ownerFingerprint || team.owner_fingerprint || currentFingerprint);
       
       // Log the fingerprints being used (for debugging)
       if (process.env.NODE_ENV !== 'production') {
         console.debug('Delete request fingerprints:', {
           current: currentFingerprint,
           team: team.ownerFingerprint || team.owner_fingerprint,
-          using: fingerprint
+          using: fingerprint,
+          adminMode: isAdmin
         });
       }
       
       await deleteTeamRequest(team.id, fingerprint);
       toast({
-        title: "Team request deleted",
-        description: "Your team request has been removed successfully."
+        title: isAdmin ? "Admin: Team request deleted" : "Team request deleted",
+        description: "The team request has been removed successfully."
       });
       onUpdate();
       setDeleteDialogOpen(false);
@@ -57,10 +66,17 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
 
   const handleEdit = () => {
     // Pass the correct fingerprint when editing
+    // If in admin mode, use the team's owner fingerprint directly
+    const fingerprint = isAdmin
+      ? (team.ownerFingerprint || team.owner_fingerprint)
+      : (team.ownerFingerprint || team.owner_fingerprint || currentFingerprint);
+    
     const teamWithFingerprint = {
       ...team,
-      ownerFingerprint: team.ownerFingerprint || team.owner_fingerprint || currentFingerprint
+      ownerFingerprint: fingerprint,
+      isAdminEdit: isAdmin
     };
+    
     navigate('/', { state: { editMode: true, teamData: teamWithFingerprint } });
   };
 
@@ -270,6 +286,12 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-4 border-t mt-4">
+              {isAdmin && (
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs mr-2">
+                  Admin Mode
+                </Badge>
+              )}
+              
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
@@ -285,7 +307,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                 </TooltipContent>
               </Tooltip>
 
-              {isOwner && (
+              {canModify && (
                 <div className="flex space-x-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -313,9 +335,12 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                     </Tooltip>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>{t('teamcard.delete_title')}</DialogTitle>
+                        <DialogTitle>{isAdmin ? "Admin: Delete Team Request" : t('teamcard.delete_title')}</DialogTitle>
                         <DialogDescription>
-                          {t('teamcard.delete_description')}
+                          {isAdmin 
+                            ? "As an admin, you are about to delete someone else's team request. This action cannot be undone."
+                            : t('teamcard.delete_description')
+                          }
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter>

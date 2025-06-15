@@ -29,7 +29,7 @@ const About = () => {
     {
       icon: Database,
       title: "Offline Storage",
-      description: "All data is stored locally using IndexedDB - no servers, no data collection."
+      description: "All data is stored locally using IndexedDB with cloud backup via Supabase."
     }
   ];
 
@@ -41,7 +41,9 @@ const About = () => {
     { name: "Framer Motion", category: "Animation", color: "bg-pink-500" },
     { name: "React Router", category: "Routing", color: "bg-red-500" },
     { name: "IndexedDB", category: "Storage", color: "bg-green-600" },
-    { name: "CSS Modules", category: "Styling", color: "bg-purple-500" }
+    { name: "Supabase", category: "Database", color: "bg-emerald-500" },
+    { name: "Express.js", category: "Backend", color: "bg-gray-600" },
+    { name: "Tailwind CSS", category: "Styling", color: "bg-blue-400" }
   ];
 
   return (
@@ -205,6 +207,14 @@ const About = () => {
                     <h4 className="font-semibold mb-2">{t('about.direct_comm_title')}</h4>
                     <p className="text-sm text-muted-foreground">
                       {t('about.direct_comm_description')}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <h4 className="font-semibold mb-2">Supabase Database</h4>
+                    <p className="text-sm text-muted-foreground">
+                      We use Supabase, a secure PostgreSQL database service, to store team requests and member information. 
+                      All data is encrypted in transit and at rest. We implement row-level security policies to ensure 
+                      data can only be accessed by authorized users. Your information is never sold or shared with third parties.
                     </p>
                   </div>
                 </div>

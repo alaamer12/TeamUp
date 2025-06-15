@@ -1,38 +1,12 @@
-import React from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Users, Target, Zap, Shield, Code, Database, Smartphone, Palette } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, Shield, Zap, Code, Database, Smartphone, Palette, Server } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useLanguage } from "../components/LanguageProvider";
 
 const About = () => {
   const { t } = useLanguage();
   
-  const features = [
-    {
-      icon: Users,
-      title: "Team Formation",
-      description: "Create detailed team requests specifying exactly what skills and expertise you need."
-    },
-    {
-      icon: Shield,
-      title: "Ownership Security",
-      description: "Browser fingerprinting ensures only you can edit or delete your team requests."
-    },
-    {
-      icon: Zap,
-      title: "Real-time Sync",
-      description: "Updates sync across all browser tabs instantly using BroadcastChannel API."
-    },
-    {
-      icon: Database,
-      title: "Offline Storage",
-      description: "All data is stored locally using IndexedDB with cloud backup via Supabase."
-    }
-  ];
-
   const techStack = [
     { name: "React", category: "Frontend", color: "bg-blue-500" },
     { name: "TypeScript", category: "Language", color: "bg-blue-600" },
@@ -151,6 +125,8 @@ const About = () => {
                         {tech.category === "Routing" && <Users className="w-6 h-6 text-white" />}
                         {tech.category === "Storage" && <Database className="w-6 h-6 text-white" />}
                         {tech.category === "Styling" && <Palette className="w-6 h-6 text-white" />}
+                        {tech.category === "Database" && <Database className="w-6 h-6 text-white" />}
+                        {tech.category === "Backend" && <Server className="w-6 h-6 text-white" />}
                       </div>
                       <h4 className="font-medium text-sm">{tech.name}</h4>
                       <p className="text-xs text-muted-foreground">{tech.category}</p>

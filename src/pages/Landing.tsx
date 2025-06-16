@@ -489,13 +489,6 @@ const Landing = () => {
                                       <div 
                                         key={field} 
                                         className="flex items-center space-x-2 cursor-pointer hover:bg-muted/50 p-1 rounded-md transition-colors"
-                                        onClick={() => {
-                                          const isChecked = !member.tech_field.includes(field);
-                                          const updatedFields = isChecked
-                                            ? [...member.tech_field, field]
-                                            : member.tech_field.filter(f => f !== field);
-                                          handleMemberChange(index, "tech_field", updatedFields);
-                                        }}
                                       >
                                         <Checkbox
                                           id={`tech-${index}-${field}`}
@@ -507,12 +500,10 @@ const Landing = () => {
                                             handleMemberChange(index, "tech_field", updatedFields);
                                           }}
                                           className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                          onClick={(e) => e.stopPropagation()} // Prevent double-firing of the event
                                         />
                                         <Label 
                                           htmlFor={`tech-${index}-${field}`} 
                                           className="text-sm cursor-pointer select-none"
-                                          onClick={(e) => e.stopPropagation()} // Prevent double-firing of the event
                                         >
                                           {field}
                                         </Label>

@@ -1,6 +1,6 @@
 {
   "name": "teamup-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Backend server for TeamUp application",
   "main": "src/index.js",
   "type": "module",

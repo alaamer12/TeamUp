@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Tool, Loader2 } from "lucide-react";
+import { AlertTriangle, Settings, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +25,7 @@ const MaintenanceMode: React.FC<MaintenanceModeProps> = ({
           <CardHeader className="pb-2">
             <div className="flex items-center justify-center mb-4">
               <div className="relative">
-                <Tool className="h-12 w-12 text-yellow-500" />
+                <Settings className="h-12 w-12 text-yellow-500" />
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}

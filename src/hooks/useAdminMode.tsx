@@ -7,6 +7,10 @@ interface AdminContextType {
   activateAdmin: (password: string) => boolean;
   deactivateAdmin: () => void;
   verifyPassword: (password: string) => boolean;
+  shortcuts: {
+    activate: string[];
+    deactivate: string[];
+  };
 }
 
 // Create context with default values
@@ -14,7 +18,11 @@ const AdminContext = createContext<AdminContextType>({
   isAdmin: false,
   activateAdmin: () => false,
   deactivateAdmin: () => {},
-  verifyPassword: () => false
+  verifyPassword: () => false,
+  shortcuts: {
+    activate: ['alt+shift+a', 'ctrl+shift+a'],
+    deactivate: ['alt+shift+d', 'ctrl+shift+d']
+  }
 });
 
 // Define props for the provider
@@ -29,13 +37,32 @@ export function AdminProvider({ children }: AdminProviderProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const adminTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Admin shortcuts configuration - centralized here
+  const shortcuts = {
+    activate: ['alt+shift+a', 'ctrl+shift+a'],
+    deactivate: ['alt+shift+d', 'ctrl+shift+d']
+  };
+
+  useEffect(() => {
+    // Make admin status available to other parts of the app via window
+    if (typeof window !== 'undefined') {
+      window.__ADMIN_MODE__ = isAdmin;
+    }
+  }, [isAdmin]);
+
   const deactivateAdmin = (): void => {
     setIsAdmin(false);
     sessionStorage.removeItem('teamup-admin-mode');
     sessionStorage.removeItem('teamup-admin-timestamp');
+    
+    if (typeof window !== 'undefined') {
+      window.__ADMIN_MODE__ = false;
+    }
+    
     if (adminTimeoutRef.current) {
       clearTimeout(adminTimeoutRef.current);
     }
+    
     toast({
       title: "Admin Mode Deactivated",
       description: "You no longer have privileged access.",
@@ -52,6 +79,12 @@ export function AdminProvider({ children }: AdminProviderProps) {
       
       if (timeElapsed < ADMIN_TIMEOUT) {
         setIsAdmin(true);
+        
+        // Set global flag for other components
+        if (typeof window !== 'undefined') {
+          window.__ADMIN_MODE__ = true;
+        }
+        
         const remainingTime = ADMIN_TIMEOUT - timeElapsed;
         adminTimeoutRef.current = setTimeout(deactivateAdmin, remainingTime);
       } else {
@@ -83,6 +116,12 @@ export function AdminProvider({ children }: AdminProviderProps) {
   const activateAdmin = (password: string): boolean => {
     if (verifyPassword(password)) {
       setIsAdmin(true);
+      
+      // Set global flag for other components
+      if (typeof window !== 'undefined') {
+        window.__ADMIN_MODE__ = true;
+      }
+      
       sessionStorage.setItem('teamup-admin-mode', 'active');
       sessionStorage.setItem('teamup-admin-timestamp', Date.now().toString());
       
@@ -97,7 +136,13 @@ export function AdminProvider({ children }: AdminProviderProps) {
   };
   
   return (
-    <AdminContext.Provider value={{ isAdmin, activateAdmin, deactivateAdmin, verifyPassword }}>
+    <AdminContext.Provider value={{ 
+      isAdmin, 
+      activateAdmin, 
+      deactivateAdmin, 
+      verifyPassword,
+      shortcuts 
+    }}>
       {children}
     </AdminContext.Provider>
   );
@@ -112,4 +157,11 @@ export function useAdminMode(): AdminContextType {
   }
   
   return context;
+}
+
+// Add TypeScript interface for window.__ADMIN_MODE__
+declare global {
+  interface Window {
+    __ADMIN_MODE__?: boolean;
+  }
 } 

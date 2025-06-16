@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import App from './App'
 import './index.css'
 import { installAllErrorHandlers } from './utils/error-handlers'
 import './router-config.js'

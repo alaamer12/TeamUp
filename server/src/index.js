@@ -83,7 +83,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.status(200).json({
     name: 'TeamUp API',
-    api_version: '1.0.1',
+    api_version: '1.0.2',
     app_version: '1.2.3',
     status: 'running',
     endpoints: {

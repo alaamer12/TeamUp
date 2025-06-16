@@ -486,7 +486,17 @@ const Landing = () => {
                                   </div>
                                   <div className="p-4 border rounded-lg bg-background/80 max-h-48 overflow-y-auto space-y-3 grid grid-cols-1 md:grid-cols-2">
                                     {techFields.map((field) => (
-                                      <div key={field} className="flex items-center space-x-2">
+                                      <div 
+                                        key={field} 
+                                        className="flex items-center space-x-2 cursor-pointer hover:bg-muted/50 p-1 rounded-md transition-colors"
+                                        onClick={() => {
+                                          const isChecked = !member.tech_field.includes(field);
+                                          const updatedFields = isChecked
+                                            ? [...member.tech_field, field]
+                                            : member.tech_field.filter(f => f !== field);
+                                          handleMemberChange(index, "tech_field", updatedFields);
+                                        }}
+                                      >
                                         <Checkbox
                                           id={`tech-${index}-${field}`}
                                           checked={member.tech_field.includes(field)}
@@ -497,8 +507,15 @@ const Landing = () => {
                                             handleMemberChange(index, "tech_field", updatedFields);
                                           }}
                                           className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                          onClick={(e) => e.stopPropagation()} // Prevent double-firing of the event
                                         />
-                                        <Label htmlFor={`tech-${index}-${field}`} className="text-sm cursor-pointer">{field}</Label>
+                                        <Label 
+                                          htmlFor={`tech-${index}-${field}`} 
+                                          className="text-sm cursor-pointer select-none"
+                                          onClick={(e) => e.stopPropagation()} // Prevent double-firing of the event
+                                        >
+                                          {field}
+                                        </Label>
                                       </div>
                                     ))}
                                   </div>
@@ -517,26 +534,34 @@ const Landing = () => {
                                     </Tooltip>
                                   </div>
                                   <div className="p-4 border rounded-lg sm:w-[750px] w-full bg-background/80 min-h-[100px]">
-                                    <div className="flex flex-wrap gap-2 w-full h-full">
-                                      {programmingLanguages.map((lang) => (
-                                        <Badge
-                                          key={lang}
-                                          variant={member.planguage.includes(lang) ? "default" : "outline"}
-                                          className={`cursor-pointer transition-all duration-200 hover:scale-105 m-1 ${
-                                            member.planguage.includes(lang) 
-                                              ? "bg-primary text-primary-foreground" 
-                                              : "hover:border-primary/50"
-                                          }`}
-                                          onClick={() => {
-                                            const updatedLangs = member.planguage.includes(lang)
-                                              ? member.planguage.filter(l => l !== lang)
-                                              : [...member.planguage, lang];
-                                            handleMemberChange(index, "planguage", updatedLangs);
-                                          }}
-                                        >
-                                          {lang}
-                                        </Badge>
-                                      ))}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                      {programmingLanguages.map((lang) => {
+                                        const isSelected = member.planguage.includes(lang);
+                                        return (
+                                          <div 
+                                            key={lang}
+                                            className="relative"
+                                          >
+                                            <div
+                                              className={`
+                                                py-1 px-2 rounded-md border text-center cursor-pointer transition-all
+                                                ${isSelected 
+                                                  ? 'bg-primary text-primary-foreground border-primary' 
+                                                  : 'bg-background hover:bg-background/80 border-input hover:border-primary/50'}
+                                                hover:scale-105 select-none
+                                              `}
+                                              onClick={() => {
+                                                const updatedLangs = isSelected
+                                                  ? member.planguage.filter(l => l !== lang)
+                                                  : [...member.planguage, lang];
+                                                handleMemberChange(index, "planguage", updatedLangs);
+                                              }}
+                                            >
+                                              {lang}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 </div>

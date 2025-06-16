@@ -1,0 +1,10 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#4f46e5" />
+  
+  <!-- Letter T -->
+  <path d="M10 8H22V11H18V24H14V11H10V8Z" fill="white" />
+  
+  <!-- Letter U -->
+  <path d="M14 14V20C14 21.1046 14.8954 22 16 22C17.1046 22 18 21.1046 18 20V14H22V20C22 23.3137 19.3137 26 16 26C12.6863 26 10 23.3137 10 20V14H14Z" fill="white" />
+</svg> 

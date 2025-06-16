@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAdminMode } from '../hooks/useAdminMode';
 import { toast } from "@/hooks/use-toast";
-import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
 
 const app_version = "1.2.3";
 

@@ -111,7 +111,11 @@ export async function createTeamRequest(teamData) {
  */
 export async function updateTeamRequest(id, teamData) {
   try {
-    // Ensure we have a valid fingerprint
+    if (!id) {
+      throw new Error('Team request ID is required for updates');
+    }
+
+    // Ensure we have a valid fingerprint - check both formats
     const ownerFingerprint = teamData.ownerFingerprint || teamData.owner_fingerprint;
     
     if (!ownerFingerprint) {
@@ -120,9 +124,10 @@ export async function updateTeamRequest(id, teamData) {
     
     console.log(`Attempting to update team request ${id} with fingerprint: ${ownerFingerprint.substring(0, 10)}...`);
     
-    // Format team data correctly
+    // Format team data correctly - ensure both snake_case and camelCase for maximum compatibility
     const formattedData = { 
       ...teamData,
+      id: id, // Explicitly include ID in request
       // Ensure correct property names match the database schema
       ownerFingerprint: ownerFingerprint,
       owner_fingerprint: ownerFingerprint, // Include both formats for backward compatibility

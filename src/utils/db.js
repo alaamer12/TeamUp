@@ -15,8 +15,17 @@ let isOfflineMode = false;
  */
 export async function saveTeamRequest(teamData) {
   try {
-    // If it has an ID, it's an update
-    if (teamData.id) {
+    // Check if this is an update operation more reliably
+    // Check both id and ID (for case inconsistencies) and ensure it's defined
+    const isUpdate = !!(teamData.id || teamData.ID);
+    
+    // Ensure id is always available in the correct case
+    if (teamData.ID && !teamData.id) {
+      teamData.id = teamData.ID;
+    }
+    
+    if (isUpdate) {
+      console.log(`Update operation detected for ID: ${teamData.id}`);
       return await updateTeamRequest(teamData);
     }
     
@@ -80,13 +89,27 @@ export async function saveTeamRequest(teamData) {
  * @returns {Promise<Object>} Updated team request
  */
 export async function updateTeamRequest(teamData) {
-  if (!teamData.id) {
+  // Make sure we have an ID - normalize it if necessary
+  const id = teamData.id || teamData.ID;
+  
+  if (!id) {
     throw new Error('Team request ID is required for updates');
+  }
+  
+  // Normalize the ID in teamData
+  teamData.id = id;
+  
+  // Ensure we have the owner fingerprint in both formats for consistency
+  if (teamData.ownerFingerprint && !teamData.owner_fingerprint) {
+    teamData.owner_fingerprint = teamData.ownerFingerprint;
+  } else if (teamData.owner_fingerprint && !teamData.ownerFingerprint) {
+    teamData.ownerFingerprint = teamData.owner_fingerprint;
   }
   
   try {
     // Try to update on the backend first
-    const updatedRequest = await apiUpdateTeamRequest(teamData.id, teamData);
+    console.log(`Sending update request for ID: ${id}, fingerprint: ${teamData.ownerFingerprint?.substring(0, 10) || 'undefined'}...`);
+    const updatedRequest = await apiUpdateTeamRequest(id, teamData);
     notifyListingsUpdated();
     return updatedRequest;
   } catch (error) {
@@ -104,20 +127,24 @@ export async function updateTeamRequest(teamData) {
     }
     
     // Find and update the request
-    const index = requests.findIndex(r => r.id === teamData.id);
+    const index = requests.findIndex(r => r.id === id);
     
     if (index === -1) {
       throw new Error('Team request not found');
     }
     
-    // Check ownership
-    if (requests[index].ownerFingerprint !== teamData.ownerFingerprint) {
+    // Check ownership - use either format of the fingerprint
+    const ownerFingerprint = teamData.ownerFingerprint || teamData.owner_fingerprint;
+    const storedFingerprint = requests[index].ownerFingerprint || requests[index].owner_fingerprint;
+    
+    if (storedFingerprint && ownerFingerprint && storedFingerprint !== ownerFingerprint) {
       throw new Error('Not authorized to update this request');
     }
     
     // Update the request
     const updatedRequest = {
       ...teamData,
+      id: id, // Ensure ID is preserved
       updatedAt: new Date().toISOString()
     };
     

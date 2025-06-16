@@ -32,10 +32,54 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Configure CORS - simplified for Vercel deployment
-// In production on Vercel, we need a simpler CORS setup
+// Get allowed origins from environment or use defaults
+const getAllowedOrigins = () => {
+  // First try to get from ALLOWED_ORIGINS environment variable
+  if (process.env.ALLOWED_ORIGINS) {
+    return process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+  }
+  
+  // Fallback to specific environment settings
+  if (nodeEnv === 'production') {
+    return [
+      'https://teamup-app.vercel.app',
+      'https://teamup-frontend-nine.vercel.app',
+      'https://teamup-frontend.vercel.app'
+    ];
+  } else {
+    return [
+      'http://localhost:8081', 
+      'http://localhost:8080', 
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
+  }
+};
+
+const allowedOrigins = getAllowedOrigins();
+console.log(`Configured CORS with allowed origins: ${allowedOrigins.join(', ')}`);
+
+// Configure CORS
 app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:8080', 'http://localhost:3000', 'https://teamup-app.vercel.app'],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl requests, etc)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || nodeEnv === 'development') {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      // In production, only allow whitelisted origins
+      if (nodeEnv === 'production') {
+        return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
+      } else {
+        // In development, allow all origins
+        return callback(null, true);
+      }
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -43,25 +87,41 @@ app.use(cors({
 }));
 
 // Log CORS configuration
-console.log('CORS configured to allow specific origins');
+console.log(`CORS configured for ${nodeEnv} environment`);
 
 // Add middleware to handle OPTIONS requests for CORS preflight
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.status(200).send();
+  const origin = req.headers.origin;
+  
+  if (!origin || allowedOrigins.includes(origin) || nodeEnv === 'development') {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).send();
+  } else {
+    console.warn(`OPTIONS request blocked for origin: ${origin}`);
+    res.status(403).send('CORS not allowed');
+  }
 });
 
 // Add manual CORS headers middleware for all routes
 app.use((req, res, next) => {
-  const allowedOrigins = ['http://localhost:8081', 'http://localhost:8080', 'http://localhost:3000', 'https://teamup-app.vercel.app'];
   const origin = req.headers.origin;
   
-  if (allowedOrigins.includes(origin)) {
+  if (!origin) {
+    // For requests without origin (like curl)
+    res.header('Access-Control-Allow-Origin', '*');
+  } else if (allowedOrigins.includes(origin) || nodeEnv === 'development') {
+    // For allowed origins or in development mode
     res.header('Access-Control-Allow-Origin', origin);
   } else {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:8081');
+    // For blocked origins in production
+    console.warn(`Request blocked for origin: ${origin}`);
+    if (nodeEnv === 'production') {
+      return res.status(403).json({ error: 'CORS not allowed' });
+    }
+    // In non-production, still allow but warn
+    res.header('Access-Control-Allow-Origin', origin);
   }
   
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -83,7 +143,7 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.status(200).json({
     name: 'TeamUp API',
-    api_version: '1.0.2',
+    api_version: '1.0.3',
     app_version: '1.2.3',
     status: 'running',
     endpoints: {

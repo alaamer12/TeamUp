@@ -11,6 +11,8 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AdminProvider, useAdminMode } from "./hooks/useAdminMode";
 import AdminModal from "./components/AdminModal";
 import { useKeyboardShortcut } from "./hooks/useKeyboardShortcut";
+import { MaintenanceModeProvider, useMaintenanceMode } from "./hooks/useMaintenanceMode";
+import MaintenanceMode from "./components/MaintenanceMode";
 import "./styles/globals.css";
 
 const queryClient = new QueryClient();
@@ -18,6 +20,7 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const { isAdmin, deactivateAdmin, shortcuts } = useAdminMode();
+  const { isMaintenanceMode, maintenanceMessage, estimatedTime } = useMaintenanceMode();
   
   // Create keyboard shortcut handlers based on centralized configuration
   const shortcutHandlers = {
@@ -50,6 +53,15 @@ const AppContent = () => {
       <Toaster />
       <Sonner />
       <AdminModal isOpen={adminModalOpen} onClose={() => setAdminModalOpen(false)} />
+      
+      {/* Show maintenance mode overlay if enabled */}
+      {isMaintenanceMode && (
+        <MaintenanceMode 
+          message={maintenanceMessage} 
+          estimatedTime={estimatedTime} 
+        />
+      )}
+      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -65,7 +77,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light" storageKey="team-formation-theme">
       <AdminProvider>
-        <AppContent />
+        <MaintenanceModeProvider>
+          <AppContent />
+        </MaintenanceModeProvider>
       </AdminProvider>
     </ThemeProvider>
   </QueryClientProvider>

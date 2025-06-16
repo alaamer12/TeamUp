@@ -233,6 +233,10 @@ app.delete('/api/requests/:id', async (req, res) => {
 app.put('/api/requests/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Make sure the ID from URL is used and properly logged
+    console.log(`Processing update for request ID: ${id}`);
+    
     // Extract members, camelCase fields from the request
     const { 
       members, 
@@ -262,6 +266,7 @@ app.put('/api/requests/:id', async (req, res) => {
       .single();
     
     if (fetchError) {
+      console.error(`Request not found for ID: ${id}`, fetchError);
       return res.status(404).json({ error: 'Request not found' });
     }
     
@@ -278,16 +283,19 @@ app.put('/api/requests/:id', async (req, res) => {
     }
     
     // Update the request with proper snake_case field names
+    // IMPORTANT: Preserve the original ID to prevent creating a new record
     const updatedRequest = {
       ...updatedFields,
-      id: request.id,
-      created_at: request.created_at,
-      owner_fingerprint: request.owner_fingerprint,
-      contact_email: contactEmail || updatedFields.contact_email,
-      contact_discord: contactDiscord || updatedFields.contact_discord,
-      group_size: groupSize || updatedFields.group_size,
+      id: id, // Explicitly use the ID from the URL parameter
+      created_at: request.created_at, // Preserve original creation date
+      owner_fingerprint: request.owner_fingerprint, // Preserve original ownership
+      contact_email: contactEmail || updatedFields.contact_email || request.contact_email,
+      contact_discord: contactDiscord || updatedFields.contact_discord || request.contact_discord,
+      group_size: groupSize || updatedFields.group_size || request.group_size,
       updated_at: new Date().toISOString()
     };
+    
+    console.log(`Updating request with ID: ${id}`);
     
     const { data, error } = await supabase
       .from('requests')
@@ -295,7 +303,15 @@ app.put('/api/requests/:id', async (req, res) => {
       .eq('id', id)
       .select();
     
-    if (error) throw error;
+    if (error) {
+      console.error(`Error during update operation for ID: ${id}`, error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.error(`Update operation did not return data for ID: ${id}`);
+      return res.status(500).json({ error: 'Update operation failed' });
+    }
     
     // Handle team members if provided
     if (members && Array.isArray(members)) {
@@ -335,6 +351,8 @@ app.put('/api/requests/:id', async (req, res) => {
       .from('team_members')
       .select('*')
       .eq('request_id', id);
+    
+    console.log(`Update completed successfully for ID: ${id}`);
     
     // Return the updated request with members
     res.json({ ...data[0], members: updatedMembers || [] });

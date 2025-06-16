@@ -8,7 +8,10 @@
     "start": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "build": "npm install",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:db": "cross-env NODE_ENV=development node tests/test-update.js",
+    "test:api": "cross-env NODE_ENV=development node tests/test-api-update.js",
+    "test": "npm run test:db && npm run test:api"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.0",
@@ -21,6 +24,7 @@
   "devDependencies": {
     "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
+    "node-fetch": "^3.3.2",
     "nodemon": "^3.0.1"
   },
   "engines": {

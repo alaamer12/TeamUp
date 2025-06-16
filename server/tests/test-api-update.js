@@ -68,6 +68,15 @@ async function callApi(endpoint, method = 'GET', body = null) {
 async function runApiUpdateTest() {
   console.log('🧪 Starting API update functionality test');
   console.log('----------------------------------');
+
+  // Check if the server is running
+  const healthCheck = await callApi('/health');
+  if (healthCheck.status !== 'running') {
+    console.error(`❌ Server is not running, please start the server and try again`);
+    console.debug(healthCheck);
+    throw new Error('Server is not running');
+  }
+
   let createdId = null;
   
   try {

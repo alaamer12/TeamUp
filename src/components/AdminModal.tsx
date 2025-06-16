@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminMode } from '../hooks/useAdminMode';
 import { toast } from "@/hooks/use-toast";
 
-const app_version = "1.2.5";
+const app_version = "1.2.6";
 
 // Highlighted note component
 const HighlightedNoteComponent = ({ note, container_className }) => {

@@ -194,6 +194,9 @@ export async function updateTeamRequest(id, teamData) {
       ownerFingerprint: ownerFingerprint,
       owner_fingerprint: ownerFingerprint,
       
+      // Include status if provided
+      status: teamData.status,
+      
       // Include members if they exist
       members: otherFields.members
     };

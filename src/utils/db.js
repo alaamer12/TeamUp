@@ -154,7 +154,9 @@ export async function updateTeamRequest(teamData) {
       ...requests[index],
       ...teamData,
       id: id, // Ensure ID is preserved
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Ensure status is preserved if not explicitly provided
+      status: teamData.status !== undefined ? teamData.status : requests[index].status
     };
     
     requests[index] = updatedRequest;

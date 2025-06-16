@@ -335,9 +335,11 @@ app.put('/api/requests/:id', async (req, res) => {
       id: id, // Explicitly use the ID from the URL parameter
       created_at: request.created_at, // Preserve original creation date
       owner_fingerprint: request.owner_fingerprint, // Preserve original ownership
-      status: requestFields.status || request.status, // Preserve or update status
       updated_at: new Date().toISOString()
     };
+    
+    // Only update status if explicitly provided, otherwise preserve existing status
+    updatedRequest.status = requestFields.status !== undefined ? requestFields.status : request.status;
     
     // Debug the update data
     console.log(`Updating request with ID: ${id}`, {

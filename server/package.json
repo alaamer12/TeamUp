@@ -9,12 +9,13 @@
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "build": "npm install",
     "lint": "eslint .",
-    "test:db": "cross-env NODE_ENV=development node tests/test-update.js",
+    "test:db": "cross-env NODE_ENV=development node tests/test-update.js && node tests/test-multiple-updates.js",
     "test:api": "cross-env NODE_ENV=development node tests/test-api-update.js",
     "test": "npm run test:db && npm run test:api",
     "test:date": "node tests/test-date-format.js",
     "data:fix": "cross-env NODE_ENV=production node utils/data-fix.js",
-    "data:fix:dev": "cross-env NODE_ENV=development node utils/data-fix.js"
+    "data:fix:dev": "cross-env NODE_ENV=development node utils/data-fix.js",
+    "fix:old-records": "cross-env NODE_ENV=production node utils/data-fix.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.0",

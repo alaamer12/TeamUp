@@ -47,176 +47,106 @@ const testMember = {
 };
 
 /**
- * Run the update test
+ * Test creating and updating a team request
  */
-async function runUpdateTest() {
-  console.log('🧪 Starting update functionality test');
+async function testDatabaseOperations() {
+  console.log('🧪 Starting database operations test');
   console.log('----------------------------------');
-  
+
+  // Generate a unique test ID
+  const testId = uuidv4();
+  console.log(`📝 Using test ID: ${testId}`);
+
   try {
-    // Step 1: Create a test record
-    console.log(`📝 Creating test record with ID: ${testRequestData.id}`);
-    const { data: createdRequest, error: createError } = await supabase
+    // 1. Create a test record
+    console.log('1️⃣ Creating test record...');
+    const testData = {
+      id: testId,
+      owner_fingerprint: 'test-fingerprint-' + Date.now(),
+      user_name: 'Test User',
+      user_gender: 'Other',
+      user_abstract: 'This is a test record',
+      user_personal_phone: '123-456-7890',
+      status: 'open'
+    };
+
+    const { data: createdData, error: createError } = await supabase
       .from('requests')
-      .insert([testRequestData])
+      .insert([testData])
       .select();
-      
+
     if (createError) {
       throw new Error(`Failed to create test record: ${createError.message}`);
     }
-    
-    console.log('✅ Test record created successfully');
-    console.log(createdRequest[0]);
-    
-    // Add test team member
-    const { error: memberError } = await supabase
-      .from('team_members')
-      .insert([{
-        request_id: testRequestData.id,
-        ...testMember
-      }]);
-      
-    if (memberError) {
-      console.warn(`⚠️ Warning: Failed to add team member: ${memberError.message}`);
-    } else {
-      console.log('✅ Test team member added successfully');
-    }
-    
-    // Step 2: Update the test record
-    const updatedData = {
-      ...testRequestData,
+
+    console.log('✅ Test record created successfully:', {
+      id: createdData[0].id,
+      user_name: createdData[0].user_name
+    });
+
+    // 2. Update the test record
+    console.log('2️⃣ Updating test record...');
+    const updateData = {
       user_name: 'Updated Test User',
-      user_abstract: 'Updated Abstract',
-      members: [{
-        ...testMember,
-        major: 'Updated Major'
-      }]
+      user_abstract: 'This record has been updated',
+      status: 'closed'
     };
-    
-    console.log(`🔄 Updating test record with ID: ${testRequestData.id}`);
-    
-    // Simulate the PUT request from the client-side code
-    const { data: beforeUpdate, error: beforeError } = await supabase
+
+    const { data: updatedData, error: updateError } = await supabase
       .from('requests')
-      .select('*');
-      
-    if (beforeError) {
-      throw new Error(`Failed to fetch records before update: ${beforeError.message}`);
-    }
-    
-    console.log(`ℹ️ Number of records before update: ${beforeUpdate.length}`);
-    
-    // Perform update
-    const { data: updatedRequest, error: updateError } = await supabase
-      .from('requests')
-      .update({
-        user_name: updatedData.user_name,
-        user_abstract: updatedData.user_abstract,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', testRequestData.id)
+      .update(updateData)
+      .eq('id', testId)
       .select();
-      
+
     if (updateError) {
       throw new Error(`Failed to update test record: ${updateError.message}`);
     }
-    
-    console.log('✅ Test record updated successfully');
-    console.log(updatedRequest[0]);
-    
-    // Update team members
-    // First delete existing
-    await supabase
-      .from('team_members')
-      .delete()
-      .eq('request_id', testRequestData.id);
-      
-    // Then insert updated
-    await supabase
-      .from('team_members')
-      .insert([{
-        request_id: testRequestData.id,
-        ...updatedData.members[0]
-      }]);
-    
-    // Step 3: Verify no duplicate records were created
-    const { data: afterUpdate, error: afterError } = await supabase
+
+    console.log('✅ Test record updated successfully:', {
+      id: updatedData[0].id,
+      user_name: updatedData[0].user_name,
+      status: updatedData[0].status
+    });
+
+    // 3. Verify the update
+    console.log('3️⃣ Verifying update...');
+    const { data: verifyData, error: verifyError } = await supabase
       .from('requests')
-      .select('*');
-      
-    if (afterError) {
-      throw new Error(`Failed to fetch records after update: ${afterError.message}`);
-    }
-    
-    console.log(`ℹ️ Number of records after update: ${afterUpdate.length}`);
-    
-    // Assert that no new records were created
-    if (afterUpdate.length !== beforeUpdate.length) {
-      throw new Error(`❌ TEST FAILED: New record was created instead of updating. Before: ${beforeUpdate.length}, After: ${afterUpdate.length}`);
-    }
-    
-    // Assert that the record was actually updated
-    const updatedRecord = afterUpdate.find(r => r.id === testRequestData.id);
-    if (updatedRecord.user_name !== updatedData.user_name) {
-      throw new Error(`❌ TEST FAILED: Record was not actually updated. Name should be "${updatedData.user_name}" but is "${updatedRecord.user_name}"`);
-    }
-    
-    console.log('✅ TEST PASSED: Record was updated correctly without creating duplicates');
-    
-    // Step 4: Get the updated team members
-    const { data: updatedMembers, error: membersError } = await supabase
-      .from('team_members')
       .select('*')
-      .eq('request_id', testRequestData.id);
-      
-    if (membersError) {
-      console.warn(`⚠️ Warning: Failed to fetch updated team members: ${membersError.message}`);
-    } else {
-      console.log('✅ Team members updated successfully');
-      console.log(updatedMembers);
-      
-      // Assert that member was updated correctly
-      if (updatedMembers.length !== 1 || updatedMembers[0].major !== updatedData.members[0].major) {
-        console.warn(`⚠️ Warning: Team members may not have updated correctly`);
-      }
+      .eq('id', testId)
+      .single();
+
+    if (verifyError) {
+      throw new Error(`Failed to verify test record: ${verifyError.message}`);
     }
-    
+
+    if (verifyData.user_name !== updateData.user_name || 
+        verifyData.status !== updateData.status) {
+      throw new Error('Verification failed: Updated data does not match');
+    }
+
+    console.log('✅ Update verified successfully');
+
   } catch (error) {
     console.error(`❌ TEST ERROR: ${error.message}`);
   } finally {
-    // Clean up: Delete the test record
-    try {
-      console.log(`🧹 Cleaning up test data with ID: ${testRequestData.id}`);
-      
-      // Clean up team members first
-      await supabase
-        .from('team_members')
-        .delete()
-        .eq('request_id', testRequestData.id);
-        
-      // Then delete the request
-      const { error: deleteError } = await supabase
-        .from('requests')
-        .delete()
-        .eq('id', testRequestData.id);
-        
-      if (deleteError) {
-        console.error(`Failed to delete test record: ${deleteError.message}`);
-      } else {
-        console.log('✅ Test data cleaned up successfully');
-      }
-    } catch (cleanupError) {
-      console.error(`Failed during cleanup: ${cleanupError.message}`);
+    // Clean up - delete the test record
+    console.log(`🧹 Cleaning up test data with ID: ${testId}`);
+    const { error: deleteError } = await supabase
+      .from('requests')
+      .delete()
+      .eq('id', testId);
+
+    if (deleteError) {
+      console.error(`❌ Failed to clean up test data: ${deleteError.message}`);
+    } else {
+      console.log('✅ Test data cleaned up successfully');
     }
+
+    console.log('----------------------------------');
+    console.log('🏁 Test complete');
   }
 }
 
 // Run the test
-runUpdateTest().then(() => {
-  console.log('----------------------------------');
-  console.log('🏁 Test complete');
-  process.exit(0);
-}).catch(error => {
-  console.error(`Unhandled error in test: ${error.message}`);
-  process.exit(1);
-}); 
+testDatabaseOperations(); 

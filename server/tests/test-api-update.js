@@ -22,9 +22,7 @@ const testRequestData = {
   user_abstract: 'API Test Abstract',
   user_personal_phone: '9876543210',
   ownerFingerprint: testOwnerFingerprint,
-  contactEmail: 'apitest@example.com',
-  contactDiscord: 'apitest#1234',
-  groupSize: 2,
+  status: 'open',
   members: [{
     tech_field: ['Node.js', 'Express'],
     gender: 'Any',
@@ -99,6 +97,7 @@ async function runApiUpdateTest() {
       id: createdId,
       user_name: 'Updated API Test User',
       user_abstract: 'Updated API Test Abstract',
+      status: 'closed',
       members: [{
         tech_field: ['Node.js', 'Express', 'React'],
         gender: 'Any',
@@ -125,8 +124,8 @@ async function runApiUpdateTest() {
     
     // Assert 2: Record was actually updated
     const updatedRecord = afterUpdateData.find(r => r.id === createdId);
-    if (!updatedRecord || updatedRecord.user_name !== 'Updated API Test User') {
-      throw new Error(`❌ TEST FAILED: Record was not updated correctly. Name should be "Updated API Test User"`);
+    if (!updatedRecord || updatedRecord.user_name !== 'Updated API Test User' || updatedRecord.status !== 'closed') {
+      throw new Error(`❌ TEST FAILED: Record was not updated correctly. Name should be "Updated API Test User" and status "closed"`);
     }
     
     // Assert 3: Team members were updated

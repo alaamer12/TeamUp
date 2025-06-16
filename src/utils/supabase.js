@@ -102,10 +102,7 @@ export const createRequest = async (requestData) => {
     // Ensure correct property names match the database schema
     const formattedRequest = {
       ...requestFields,
-      owner_fingerprint: requestFields.ownerFingerprint || requestFields.owner_fingerprint,
-      contact_email: requestFields.contactEmail || requestFields.contact_email,
-      contact_discord: requestFields.contactDiscord || requestFields.contact_discord,
-      group_size: requestFields.groupSize || requestFields.group_size
+      owner_fingerprint: requestFields.ownerFingerprint || requestFields.owner_fingerprint
     };
     
     // Insert the request

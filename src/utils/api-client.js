@@ -126,10 +126,7 @@ export async function createTeamRequest(teamData) {
     const formattedData = { 
       ...teamData,
       // Ensure correct property names match the database schema
-      owner_fingerprint: teamData.ownerFingerprint || teamData.owner_fingerprint,
-      contact_email: teamData.contactEmail || teamData.contact_email,
-      contact_discord: teamData.contactDiscord || teamData.contact_discord,
-      group_size: teamData.groupSize || teamData.group_size
+      owner_fingerprint: teamData.ownerFingerprint || teamData.owner_fingerprint
     };
     
     const response = await fetchApi('/requests', {
@@ -174,10 +171,10 @@ export async function updateTeamRequest(id, teamData) {
       user_gender, userGender,
       user_abstract, userAbstract,
       user_personal_phone, userPersonalPhone,
+      // Remove fields that don't exist in the database schema
       contactEmail, contact_email,
       contactDiscord, contact_discord,
       groupSize, group_size,
-      // Remove fields that don't exist in the database schema
       isAdminEdit, isAdmin, adminMode, 
       ...otherFields 
     } = teamData;
@@ -193,12 +190,9 @@ export async function updateTeamRequest(id, teamData) {
       user_abstract: user_abstract || userAbstract,
       user_personal_phone: user_personal_phone || userPersonalPhone,
       
-      // Handle contact fields in both formats
+      // Handle fingerprint in both formats
       ownerFingerprint: ownerFingerprint,
       owner_fingerprint: ownerFingerprint,
-      contact_email: contactEmail || contact_email,
-      contact_discord: contactDiscord || contact_discord,
-      group_size: groupSize || group_size,
       
       // Include members if they exist
       members: otherFields.members

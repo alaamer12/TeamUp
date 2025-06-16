@@ -155,10 +155,7 @@ app.post('/api/requests', async (req, res) => {
     // Extract team members and camelCase fields from request data
     const { 
       members, 
-      ownerFingerprint, 
-      contactEmail, 
-      contactDiscord, 
-      groupSize,
+      ownerFingerprint,
       ...requestFields 
     } = req.body;
     
@@ -168,9 +165,6 @@ app.post('/api/requests', async (req, res) => {
       ...requestFields,
       // Handle both camelCase and snake_case versions
       owner_fingerprint: ownerFingerprint || requestFields.owner_fingerprint,
-      contact_email: contactEmail || requestFields.contact_email,
-      contact_discord: contactDiscord || requestFields.contact_discord,
-      group_size: groupSize || requestFields.group_size,
       created_at: new Date().toISOString()
     };
     
@@ -274,9 +268,6 @@ app.put('/api/requests/:id', async (req, res) => {
       members, 
       ownerFingerprint: reqOwnerFingerprint, 
       owner_fingerprint: reqOwnerFingerprintSnake,
-      contactEmail, 
-      contactDiscord, 
-      groupSize,
       // Extract but don't use fields that might not exist in DB
       isAdminEdit, isAdmin, adminMode,
       // Other fields
@@ -320,8 +311,7 @@ app.put('/api/requests/:id', async (req, res) => {
     // Create a filtered update object with only valid DB columns
     const validDbColumns = [
       'id', 'user_name', 'user_gender', 'user_abstract', 'user_personal_phone',
-      'owner_fingerprint', 'contact_email', 'contact_discord', 'group_size',
-      'created_at', 'updated_at'
+      'owner_fingerprint', 'status', 'created_at', 'updated_at'
     ];
     
     // Filter request fields to only include valid columns
@@ -345,9 +335,7 @@ app.put('/api/requests/:id', async (req, res) => {
       id: id, // Explicitly use the ID from the URL parameter
       created_at: request.created_at, // Preserve original creation date
       owner_fingerprint: request.owner_fingerprint, // Preserve original ownership
-      contact_email: contactEmail || filteredFields.contact_email || request.contact_email,
-      contact_discord: contactDiscord || filteredFields.contact_discord || request.contact_discord,
-      group_size: groupSize || filteredFields.group_size || request.group_size,
+      status: requestFields.status || request.status, // Preserve or update status
       updated_at: new Date().toISOString()
     };
     

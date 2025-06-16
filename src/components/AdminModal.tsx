@@ -6,10 +6,20 @@ import { useAdminMode } from '../hooks/useAdminMode';
 import { toast } from "@/hooks/use-toast";
 import { useKeyboardShortcut } from '../hooks/useKeyboardShortcut';
 
+const app_version = "1.2.3";
+
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const HighlightedNoteComponent: React.FC<{ container_className?: string, note: string }> = ({ container_className, note }) => {
+  return (
+    <div className={`bg-yellow-50/20 dark:bg-yellow-900/20 p-2 rounded-md ${container_className}`}>
+      <p className="text-sm text-yellow-800 dark:text-yellow-400">{note}</p>
+    </div>
+  );
+};
 
 const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
@@ -126,7 +136,12 @@ const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               Activate admin mode: <kbd className="px-1 py-0.5 text-xs font-semibold border rounded">{primaryActivate}</kbd><br />
               Deactivate admin mode: <kbd className="px-1 py-0.5 text-xs font-semibold border rounded">{primaryDeactivate}</kbd>
               <br />
+              <br />
+              <strong>Current app version: {app_version}</strong>
+              <br />
               <span className="text-xs text-gray-400">(Fallback: <kbd className="px-1 py-0.5 text-xs font-semibold border rounded">{secondaryActivate}</kbd> / <kbd className="px-1 py-0.5 text-xs font-semibold border rounded">{secondaryDeactivate}</kbd>)</span>
+              <br />
+              <HighlightedNoteComponent container_className='mt-4' note="Note: The admin mode is currently in development and may not work as expected. Please use with caution." />
             </p>
           </div>
         </form>

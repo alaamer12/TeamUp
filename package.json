@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:backend": "cd server && npm run dev",
+    "preview:backend": "cd server && npm run preview",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\"",
+    "preview:all": "concurrently \"npm run dev\" \"npm run preview:backend\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

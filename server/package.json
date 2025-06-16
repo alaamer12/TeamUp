@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "test:db": "cross-env NODE_ENV=development node tests/test-update.js",
     "test:api": "cross-env NODE_ENV=development node tests/test-api-update.js",
-    "test": "npm run test:db && npm run test:api"
+    "test": "npm run test:db && npm run test:api",
+    "test:date": "node tests/test-date-format.js",
+    "data:fix": "cross-env NODE_ENV=production node utils/data-fix.js",
+    "data:fix:dev": "cross-env NODE_ENV=development node utils/data-fix.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.0",
@@ -25,7 +28,10 @@
     "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0",
+    "jsdom": "^22.1.0",
+    "supertest": "^6.3.3"
   },
   "engines": {
     "node": ">=18.0.0"

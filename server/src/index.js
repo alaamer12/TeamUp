@@ -117,7 +117,19 @@ app.get('/api/requests', async (req, res) => {
           return { ...request, members: [] };
         }
         
-        return { ...request, members: members || [] };
+        // Add camelCase versions of snake_case fields for better frontend compatibility
+        // This helps with older records that might not have been standardized
+        const enhancedRequest = { 
+          ...request,
+          members: members || [],
+          // Add camelCase version if snake_case exists
+          createdAt: request.created_at || null,
+          expiresAt: request.expires_at || null,
+          updatedAt: request.updated_at || null,
+          ownerFingerprint: request.owner_fingerprint || null,
+        };
+        
+        return enhancedRequest;
       })
     );
     

@@ -93,7 +93,10 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (team: any) => {
+    // Try different field name variations (camelCase, snake_case)
+    const dateString = team.createdAt || team.created_at;
+    
     if (!dateString) return "Unknown date";
     try {
       return new Date(dateString).toLocaleDateString();
@@ -145,7 +148,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                     <TooltipTrigger asChild>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span>{formatDate(team.createdAt)}</span>
+                        <span>{formatDate(team)}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>

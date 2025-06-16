@@ -32,103 +32,65 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Get allowed origins from environment or use defaults
+// Get allowed origins from environment
 const getAllowedOrigins = () => {
-  // First try to get from ALLOWED_ORIGINS environment variable
-  if (process.env.ALLOWED_ORIGINS) {
-    return process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
-  }
+  const origins = process.env.ALLOWED_ORIGINS || '';
+  const configuredOrigins = origins.split(',').map(origin => origin.trim()).filter(Boolean);
   
-  // Fallback to specific environment settings
-  if (nodeEnv === 'production') {
-    return [
-      'https://teamup-app.vercel.app',
-      'https://teamup-frontend-nine.vercel.app',
-      'https://teamup-frontend.vercel.app'
-    ];
-  } else {
-    return [
-      'http://localhost:8081', 
-      'http://localhost:8080', 
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ];
-  }
+  // Always include these origins for development and backward compatibility
+  const defaultOrigins = [
+    'http://localhost:8081', 
+    'http://localhost:8080', 
+    'http://localhost:3000', 
+    'https://teamup-app.vercel.app',
+    'https://teamup-frontend-nine.vercel.app'  // Add the current frontend URL
+  ];
+  
+  // Combine and deduplicate origins
+  return [...new Set([...configuredOrigins, ...defaultOrigins])];
 };
 
 const allowedOrigins = getAllowedOrigins();
-console.log(`Configured CORS with allowed origins: ${allowedOrigins.join(', ')}`);
+// Log the origins for debugging purposes, especially in production
+console.log(`CORS: Allowed origins: [${allowedOrigins.join(', ')}]`);
 
-// Configure CORS
-app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl requests, etc)
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Log the incoming origin for every request
+    console.log(`CORS: Incoming request from origin: ${origin || 'no origin'}`);
+
+    // Allow requests with no origin (like mobile apps, curl, postman)
     if (!origin) {
+      console.log('CORS: Allowing request with no origin.');
       return callback(null, true);
     }
     
-    if (allowedOrigins.indexOf(origin) !== -1 || nodeEnv === 'development') {
-      callback(null, true);
+    // Check if the origin is in our allowed list
+    if (allowedOrigins.some(allowedOrigin => 
+        origin === allowedOrigin || 
+        origin.includes(allowedOrigin) || 
+        allowedOrigin.includes(origin))) {
+      console.log(`CORS: Origin ${origin} is allowed.`);
+      return callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      // In production, only allow whitelisted origins
-      if (nodeEnv === 'production') {
-        return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
-      } else {
-        // In development, allow all origins
-        return callback(null, true);
-      }
+      const msg = `CORS: The origin ${origin} is not allowed. Allowed origins: [${allowedOrigins.join(', ')}]`;
+      console.warn(msg);
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
-  maxAge: 86400 // Enable CORS preflight cache for 24 hours
-}));
+  maxAge: 86400, // Enable CORS preflight cache for 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
 
-// Log CORS configuration
-console.log(`CORS configured for ${nodeEnv} environment`);
+// Configure CORS using the options
+app.use(cors(corsOptions));
 
-// Add middleware to handle OPTIONS requests for CORS preflight
-app.options('*', (req, res) => {
-  const origin = req.headers.origin;
-  
-  if (!origin || allowedOrigins.includes(origin) || nodeEnv === 'development') {
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.status(200).send();
-  } else {
-    console.warn(`OPTIONS request blocked for origin: ${origin}`);
-    res.status(403).send('CORS not allowed');
-  }
-});
-
-// Add manual CORS headers middleware for all routes
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  if (!origin) {
-    // For requests without origin (like curl)
-    res.header('Access-Control-Allow-Origin', '*');
-  } else if (allowedOrigins.includes(origin) || nodeEnv === 'development') {
-    // For allowed origins or in development mode
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    // For blocked origins in production
-    console.warn(`Request blocked for origin: ${origin}`);
-    if (nodeEnv === 'production') {
-      return res.status(403).json({ error: 'CORS not allowed' });
-    }
-    // In non-production, still allow but warn
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  next();
-});
+// Add OPTIONS handler for all routes to handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Middleware
 app.use(express.json());
@@ -143,8 +105,8 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.status(200).json({
     name: 'TeamUp API',
-    api_version: '1.0.3',
-    app_version: '1.2.3',
+    api_version: '1.0.1',
+    app_version: '1.2.1',
     status: 'running',
     endpoints: {
       health: '/health',
@@ -177,19 +139,7 @@ app.get('/api/requests', async (req, res) => {
           return { ...request, members: [] };
         }
         
-        // Add camelCase versions of snake_case fields for better frontend compatibility
-        // This helps with older records that might not have been standardized
-        const enhancedRequest = { 
-          ...request,
-          members: members || [],
-          // Add camelCase version if snake_case exists
-          createdAt: request.created_at || null,
-          expiresAt: request.expires_at || null,
-          updatedAt: request.updated_at || null,
-          ownerFingerprint: request.owner_fingerprint || null,
-        };
-        
-        return enhancedRequest;
+        return { ...request, members: members || [] };
       })
     );
     
@@ -476,4 +426,4 @@ app.put('/api/requests/:id', async (req, res) => {
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-}); 
+});

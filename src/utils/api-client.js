@@ -44,7 +44,7 @@ async function fetchApi(endpoint, options = {}) {
       headers: {
         ...options.headers,
         'Content-Type': 'application/json',
-        // Only use standard headers that won't trigger CORS preflight issues
+        // Don't add additional headers that would trigger preflight unless needed
       }
     });
     

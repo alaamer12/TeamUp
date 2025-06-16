@@ -4,9 +4,15 @@ import './index.css'
 import { installAllErrorHandlers } from './utils/error-handlers'
 import './router-config.js'
 import { LanguageProvider } from './components/LanguageProvider'
+import { initializeApplication } from './utils/index'
 
 // Install global error handlers to catch and suppress extension errors
 installAllErrorHandlers(true);
+
+// Initialize the application and clear any stale cache
+initializeApplication()
+  .then(() => console.log('Application initialized successfully'))
+  .catch(err => console.error('Failed to initialize application:', err));
 
 // Safe root mounting
 const rootElement = document.getElementById("root");

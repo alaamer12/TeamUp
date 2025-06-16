@@ -3,10 +3,26 @@
  */
 
 // Production API URL - use environment variable if available, otherwise use default
-const API_URL = import.meta.env.VITE_API_URL || 'https://teamup-server.vercel.app/api';
+export const API_URL = (() => {
+  // Get the configured API URL from environment
+  const configuredUrl = import.meta.env.VITE_API_URL;
+  
+  // If we have a configured URL, use it
+  if (configuredUrl) {
+    console.log(`Using configured API URL: ${configuredUrl}`);
+    return configuredUrl;
+  }
+  
+  // Otherwise use development or production fallbacks
+  const isDev = import.meta.env.MODE === 'development';
+  const defaultUrl = isDev ? 'http://localhost:8080/api' : 'https://teamup-server.vercel.app/api';
+  
+  console.log(`Using default ${isDev ? 'development' : 'production'} API URL: ${defaultUrl}`);
+  return defaultUrl;
+})();
 
 // Log the API URL being used (helpful for debugging)
-console.log(`Using API URL: ${API_URL} (${import.meta.env.MODE} mode)`);
+console.log(`API client initialized with URL: ${API_URL} (${import.meta.env.MODE} mode)`);
 
 /**
  * Fetch with appropriate API URL based on environment
@@ -16,8 +32,11 @@ console.log(`Using API URL: ${API_URL} (${import.meta.env.MODE} mode)`);
  */
 async function fetchApi(endpoint, options = {}) {
   try {
+    const timestamp = Date.now();
+    const cacheBuster = endpoint.includes('?') ? `&_t=${timestamp}` : `?_t=${timestamp}`;
+    
     // Always use the configured API URL
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(`${API_URL}${endpoint}${cacheBuster}`, {
       ...options,
       // Add CORS mode to ensure proper cross-origin requests
       mode: 'cors',
@@ -25,6 +44,7 @@ async function fetchApi(endpoint, options = {}) {
       headers: {
         ...options.headers,
         'Content-Type': 'application/json',
+        // Only use standard headers that won't trigger CORS preflight issues
       }
     });
     
@@ -63,8 +83,32 @@ async function fetchWithFallback(endpoint, options = {}) {
  */
 export async function fetchTeamRequests() {
   try {
+    console.log(`Fetching team requests from API: ${API_URL}/requests`);
+    const startTime = Date.now();
+    
     const response = await fetchApi('/requests');
-    return await response.json();
+    console.log(`API response received in ${Date.now() - startTime}ms`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    
+    // Check if the response is valid JSON
+    let data;
+    try {
+      data = await response.json();
+      
+      if (!Array.isArray(data)) {
+        console.error('API returned non-array response:', data);
+        return [];
+      }
+      
+      console.log(`Successfully fetched ${data.length} team requests from API`);
+      return data;
+    } catch (parseError) {
+      console.error('Error parsing API response:', parseError);
+      throw new Error('Invalid response format');
+    }
   } catch (error) {
     console.error('Error fetching team requests:', error);
     throw error;
@@ -124,32 +168,82 @@ export async function updateTeamRequest(id, teamData) {
     
     console.log(`Attempting to update team request ${id} with fingerprint: ${ownerFingerprint.substring(0, 10)}...`);
     
+    // Extract common fields from teamData
+    const { 
+      user_name, userName, 
+      user_gender, userGender,
+      user_abstract, userAbstract,
+      user_personal_phone, userPersonalPhone,
+      contactEmail, contact_email,
+      contactDiscord, contact_discord,
+      groupSize, group_size,
+      // Remove fields that don't exist in the database schema
+      isAdminEdit, isAdmin, adminMode, 
+      ...otherFields 
+    } = teamData;
+    
     // Format team data correctly - ensure both snake_case and camelCase for maximum compatibility
     const formattedData = { 
-      ...teamData,
-      id: id, // Explicitly include ID in request
-      // Ensure correct property names match the database schema
+      // Include only known database fields
+      id: id,
+      
+      // Handle user fields in both formats
+      user_name: user_name || userName,
+      user_gender: user_gender || userGender,
+      user_abstract: user_abstract || userAbstract,
+      user_personal_phone: user_personal_phone || userPersonalPhone,
+      
+      // Handle contact fields in both formats
       ownerFingerprint: ownerFingerprint,
-      owner_fingerprint: ownerFingerprint, // Include both formats for backward compatibility
-      contact_email: teamData.contactEmail || teamData.contact_email,
-      contact_discord: teamData.contactDiscord || teamData.contact_discord,
-      group_size: teamData.groupSize || teamData.group_size
+      owner_fingerprint: ownerFingerprint,
+      contact_email: contactEmail || contact_email,
+      contact_discord: contactDiscord || contact_discord,
+      group_size: groupSize || group_size,
+      
+      // Include members if they exist
+      members: otherFields.members
     };
     
-    const response = await fetchApi(`/requests/${id}`, {
+    // Log the actual data being sent to the server
+    console.log('Sending update with data:', { 
+      id,
+      user_name: formattedData.user_name,
+      fields: Object.keys(formattedData)
+    });
+    
+    // Add timestamp to URL to bypass browser cache
+    const timestamp = Date.now();
+    const url = `/requests/${id}?nocache=${timestamp}`;
+    
+    const response = await fetchApi(url, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(formattedData),
     });
     
+    // Verify the response before proceeding
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` }));
       throw new Error(errorData.error || `HTTP error ${response.status}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    
+    // Verify response data contains the updated fields
+    if (!result || typeof result !== 'object') {
+      throw new Error('Received invalid response data from server');
+    }
+    
+    // Log the update result for debugging
+    console.log('Update successful:', {
+      requestedName: formattedData.user_name,
+      responseName: result.user_name,
+      id: result.id
+    });
+    
+    return result;
   } catch (error) {
     console.error('Error updating team request:', error);
     throw error;

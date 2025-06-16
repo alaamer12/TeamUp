@@ -35,18 +35,19 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Configure CORS - simplified for Vercel deployment
 // In production on Vercel, we need a simpler CORS setup
 app.use(cors({
-  origin: '*', // Allow all origins in production for now
+  origin: ['http://localhost:8081', 'http://localhost:8080', 'http://localhost:3000', 'https://teamup-app.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  maxAge: 86400 // Enable CORS preflight cache for 24 hours
 }));
 
 // Log CORS configuration
-console.log('CORS configured to allow all origins');
+console.log('CORS configured to allow specific origins');
 
 // Add middleware to handle OPTIONS requests for CORS preflight
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.status(200).send();
@@ -54,9 +55,18 @@ app.options('*', (req, res) => {
 
 // Add manual CORS headers middleware for all routes
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = ['http://localhost:8081', 'http://localhost:8080', 'http://localhost:3000', 'https://teamup-app.vercel.app'];
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:8081');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
   next();
 });
 
@@ -245,7 +255,10 @@ app.put('/api/requests/:id', async (req, res) => {
       contactEmail, 
       contactDiscord, 
       groupSize,
-      ...updatedFields 
+      // Extract but don't use fields that might not exist in DB
+      isAdminEdit, isAdmin, adminMode,
+      // Other fields
+      ...requestFields 
     } = req.body;
     
     // Use either camelCase or snake_case version
@@ -282,20 +295,46 @@ app.put('/api/requests/:id', async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this request' });
     }
     
+    // Create a filtered update object with only valid DB columns
+    const validDbColumns = [
+      'id', 'user_name', 'user_gender', 'user_abstract', 'user_personal_phone',
+      'owner_fingerprint', 'contact_email', 'contact_discord', 'group_size',
+      'created_at', 'updated_at'
+    ];
+    
+    // Filter request fields to only include valid columns
+    const filteredFields = {};
+    Object.keys(requestFields).forEach(key => {
+      if (validDbColumns.includes(key)) {
+        filteredFields[key] = requestFields[key];
+      }
+    });
+    
     // Update the request with proper snake_case field names
     // IMPORTANT: Preserve the original ID to prevent creating a new record
     const updatedRequest = {
-      ...updatedFields,
+      ...filteredFields,
+      // Explicitly handle common fields
+      user_name: requestFields.user_name || request.user_name,
+      user_gender: requestFields.user_gender || request.user_gender,
+      user_abstract: requestFields.user_abstract || request.user_abstract,
+      user_personal_phone: requestFields.user_personal_phone || request.user_personal_phone,
+      
       id: id, // Explicitly use the ID from the URL parameter
       created_at: request.created_at, // Preserve original creation date
       owner_fingerprint: request.owner_fingerprint, // Preserve original ownership
-      contact_email: contactEmail || updatedFields.contact_email || request.contact_email,
-      contact_discord: contactDiscord || updatedFields.contact_discord || request.contact_discord,
-      group_size: groupSize || updatedFields.group_size || request.group_size,
+      contact_email: contactEmail || filteredFields.contact_email || request.contact_email,
+      contact_discord: contactDiscord || filteredFields.contact_discord || request.contact_discord,
+      group_size: groupSize || filteredFields.group_size || request.group_size,
       updated_at: new Date().toISOString()
     };
     
-    console.log(`Updating request with ID: ${id}`);
+    // Debug the update data
+    console.log(`Updating request with ID: ${id}`, {
+      originalUserName: request.user_name,
+      newUserName: updatedRequest.user_name,
+      fieldsChanged: Object.keys(filteredFields),
+    });
     
     const { data, error } = await supabase
       .from('requests')

@@ -109,8 +109,16 @@ export async function updateTeamRequest(teamData) {
   try {
     // Try to update on the backend first
     console.log(`Sending update request for ID: ${id}, fingerprint: ${teamData.ownerFingerprint?.substring(0, 10) || 'undefined'}...`);
+    
+    // Clear any cached data that could interfere with the update
+    await clearCachedRequest(id);
+    
     const updatedRequest = await apiUpdateTeamRequest(id, teamData);
+    
+    // Force a complete refresh of the listings data
+    await invalidateCache();
     notifyListingsUpdated();
+    
     return updatedRequest;
   } catch (error) {
     console.error('Failed to update team request:', error);
@@ -143,6 +151,7 @@ export async function updateTeamRequest(teamData) {
     
     // Update the request
     const updatedRequest = {
+      ...requests[index],
       ...teamData,
       id: id, // Ensure ID is preserved
       updatedAt: new Date().toISOString()
@@ -159,15 +168,72 @@ export async function updateTeamRequest(teamData) {
 }
 
 /**
+ * Clear a cached request by ID
+ * @param {string} id - Request ID to clear from cache
+ * @returns {Promise<void>}
+ */
+export async function clearCachedRequest(id) {
+  try {
+    const requests = await get(TEAM_REQUESTS_KEY) || [];
+    const filtered = requests.filter(r => r.id !== id);
+    
+    // Only update if there was a change
+    if (filtered.length !== requests.length) {
+      await set(TEAM_REQUESTS_KEY, filtered);
+    }
+  } catch (error) {
+    console.error('Failed to clear cached request:', error);
+  }
+}
+
+/**
+ * Invalidate all cached data to force fetch from server
+ */
+export async function invalidateCache() {
+  try {
+    isOfflineMode = false;
+    await set(TEAM_REQUESTS_KEY, null);
+  } catch (error) {
+    console.error('Failed to invalidate cache:', error);
+  }
+}
+
+/**
  * Get all team requests
  * @returns {Promise<Array>} Team requests
  */
 export async function getTeamRequests() {
+  console.log('Getting team requests. Offline mode:', isOfflineMode);
+  
   try {
     // Try to fetch from backend first
     if (!isOfflineMode) {
-      const requests = await fetchTeamRequests();
-      return requests;
+      console.log('Fetching team requests from server...');
+      
+      try {
+        const requests = await fetchTeamRequests();
+        console.log(`Fetched ${requests?.length || 0} team requests from server:`, requests);
+        
+        // Save to local cache for offline use
+        try {
+          await set(TEAM_REQUESTS_KEY, requests);
+          console.log('Saved team requests to local cache');
+        } catch (cacheError) {
+          console.warn('Failed to update local cache:', cacheError);
+        }
+        
+        if (!requests || requests.length === 0) {
+          console.warn('Server returned empty team requests array!');
+        }
+        
+        return requests;
+      } catch (fetchError) {
+        console.error('Error during server fetch:', fetchError);
+        isOfflineMode = true;
+        throw fetchError;
+      }
+    } else {
+      console.log('Using offline mode for team requests');
     }
   } catch (error) {
     console.error('Failed to fetch team requests:', error);
@@ -176,7 +242,9 @@ export async function getTeamRequests() {
   
   // Fallback to local storage
   try {
+    console.log('Falling back to local cache for team requests');
     const localRequests = await get(TEAM_REQUESTS_KEY) || [];
+    console.log(`Retrieved ${localRequests.length} team requests from local cache`);
     return localRequests;
   } catch (error) {
     console.error('Failed to get local team requests:', error);
@@ -249,4 +317,102 @@ export function subscribeToListingsUpdates(callback) {
 export function notifyListingsUpdated() {
   const channel = new BroadcastChannel('teamup-listings');
   channel.postMessage({ type: 'LISTINGS_UPDATED' });
+}
+
+/**
+ * Force refresh team requests from the server
+ * Use this when you need to ensure you have the latest data
+ * @returns {Promise<Array>} Team requests
+ */
+export async function forceRefreshTeamRequests() {
+  try {
+    console.log('Force refreshing team requests from server...');
+    
+    // Clear local cache first
+    await invalidateCache();
+    
+    // Then fetch from server
+    const requests = await fetchTeamRequests();
+    
+    // Save to local cache for offline use
+    try {
+      await set(TEAM_REQUESTS_KEY, requests);
+    } catch (cacheError) {
+      console.warn('Failed to update local cache:', cacheError);
+    }
+    
+    // Notify any listeners
+    notifyListingsUpdated();
+    
+    return requests;
+  } catch (error) {
+    console.error('Failed to force refresh team requests:', error);
+    throw error;
+  }
+}
+
+/**
+ * Recovery function to reset the app state and fetch fresh data
+ * Call this function when cards are not showing but you know data exists
+ * @returns {Promise<Array>} Team requests
+ */
+export async function recoverAppState() {
+  console.log('%c🚑 Starting recovery process...', 'font-weight: bold; color: orange');
+  
+  try {
+    // 1. Reset offline mode flag
+    isOfflineMode = false;
+    console.log('Reset offline mode flag');
+    
+    // 2. Clear any existing cache
+    await set(TEAM_REQUESTS_KEY, null);
+    console.log('Cleared local cache');
+    
+    // 3. Try direct fetch with no caching
+    console.log('Attempting direct API fetch...');
+    
+    // Import dynamically to avoid circular imports
+    const { API_URL } = await import('./api-client.js');
+    
+    // Add timestamp to URL to bypass browser cache
+    const timestamp = Date.now();
+    const url = `${API_URL}/requests?nocache=${timestamp}`;
+    console.log(`Fetching from: ${url}`);
+    
+    // Direct fetch with minimal headers to avoid CORS issues
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    // Parse the response
+    const freshData = await response.json();
+    console.log(`Received ${freshData.length} records directly from API`);
+    
+    // 4. Save the data to cache
+    await set(TEAM_REQUESTS_KEY, freshData);
+    console.log('Saved fresh data to local cache');
+    
+    // 5. Notify about the update
+    notifyListingsUpdated();
+    console.log('%c✅ Recovery process completed successfully', 'font-weight: bold; color: green');
+    
+    return freshData;
+  } catch (error) {
+    console.error('Recovery process failed:', error);
+    throw error;
+  }
+}
+
+// Expose recovery function to browser console for easy access
+if (typeof window !== 'undefined') {
+  window.recoverAppState = recoverAppState;
 }

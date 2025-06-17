@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff, Loader2 } from "lucide-react";
+import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff, Loader2} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import { saveTeamRequest } from "../utils/db";
@@ -19,12 +19,17 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLanguage } from "../components/LanguageProvider";
 import Footer from "@/components/Footer";
 
+// Maximum limits to prevent spamming
+const MAX_MEMBERS = 10;
+const MAX_PLANGUAGE = 3;
+const MAX_TECH_FIELDS = 3;
+
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
   "Data Science", "AI [ML, DL, CV, NLP]", "DevOps", "UI/UX",
 ];
 
-const majors = ["CS", "IS", "SC", "AI"];
+const majors = ["CS", "IS", "SC", "AI", "Any"];
 
 const programmingLanguages = [
   "JavaScript", "Python", "Java", "C++", "C# [.NET]", "Rust", "PHP",
@@ -225,6 +230,15 @@ const TechFieldsSelection = ({ member, index, onMemberChange, t }) => (
               id={`tech-${index}-${field}`}
               checked={member.tech_field.includes(field)}
               onCheckedChange={(checked) => {
+                if (checked && member.tech_field.length >= MAX_TECH_FIELDS) {
+                  toast({
+                    title: t('landing.limit_exceeded'),
+                    description: `${t('landing.max_tech_fields')} (${MAX_TECH_FIELDS})`,
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
                 const updatedFields = checked
                   ? [...member.tech_field, field]
                   : member.tech_field.filter(f => f !== field);
@@ -274,6 +288,15 @@ const ProgrammingLanguagesSelection = ({ member, index, onMemberChange, t }) => 
                 hover:scale-105 select-none
               `}
               onClick={() => {
+                if (!isSelected && member.planguage.length >= MAX_PLANGUAGE) {
+                  toast({
+                    title: t('landing.limit_exceeded'),
+                    description: `${t('landing.max_planguage')} (${MAX_PLANGUAGE})`,
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
                 const updatedLangs = isSelected
                   ? member.planguage.filter(l => l !== lang)
                   : [...member.planguage, lang];
@@ -431,13 +454,17 @@ const MemberRequirementsSection = ({ formData, onMemberChange, onAddMember, onRe
             variant="outline" 
             size="sm"
             className="border-primary/50 hover:border-primary hover:bg-primary/10 transition-all duration-300"
+            disabled={formData.members.length >= MAX_MEMBERS}
           >
             <Plus className="w-4 h-4 mr-2" />
             {t('landing.add_member')}
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{t('landing.add_member_tooltip')}</p>
+          <p>{formData.members.length >= MAX_MEMBERS 
+              ? `${t('landing.max_members_tooltip')} (${MAX_MEMBERS})` 
+              : t('landing.add_member_tooltip')}
+          </p>
         </TooltipContent>
       </Tooltip>
     </div>
@@ -542,6 +569,15 @@ const Landing = () => {
   };
 
   const addMember = () => {
+    if (formData.members.length >= MAX_MEMBERS) {
+      toast({
+        title: t('landing.limit_exceeded'),
+        description: `${t('landing.max_members')} (${MAX_MEMBERS})`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       members: [...prev.members, {

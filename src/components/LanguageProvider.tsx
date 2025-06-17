@@ -240,6 +240,26 @@ export const translations = {
     en: "You're currently in offline mode. Your team request will be saved locally and synced when you reconnect.",
     ar: "أنت حاليًا في وضع عدم الاتصال. سيتم حفظ طلب الفريق الخاص بك محليًا ومزامنته عند إعادة الاتصال."
   },
+  "landing.limit_exceeded": {
+    en: "Limit Exceeded",
+    ar: "تم تجاوز الحد"
+  },
+  "landing.max_tech_fields": {
+    en: "Maximum tech fields per member",
+    ar: "الحد الأقصى للمجالات التقنية لكل عضو"
+  },
+  "landing.max_planguage": {
+    en: "Maximum programming languages per member",
+    ar: "الحد الأقصى للغات البرمجة لكل عضو"
+  },
+  "landing.max_members": {
+    en: "Maximum team members",
+    ar: "الحد الأقصى لأعضاء الفريق"
+  },
+  "landing.max_members_tooltip": {
+    en: "Maximum number of team members reached",
+    ar: "تم الوصول إلى الحد الأقصى لعدد أعضاء الفريق"
+  },
   
   // Listings Page
   "listings.title": {

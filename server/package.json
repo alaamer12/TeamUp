@@ -4,6 +4,16 @@
   "description": "Backend server for TeamUp application",
   "main": "src/index.js",
   "type": "module",
+  "author": {
+    "name": "Alaamer",
+    "email": "ahmedmuhmmed239@gmail.com",
+    "url": "https://github.com/alaamer12"
+  },
+  "homepage": "https://github.com/alaamer12/TeamUp",
+  "bugs": {
+    "url": "https://github.com/alaamer12/TeamUp/issues",
+    "email": "ahmedmuhmmed239@gmail.com"
+  },
   "scripts": {
     "preview": "cross-env NODE_ENV=production node src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",

@@ -3,6 +3,16 @@
   "private": true,
   "version": "1.2.6",
   "type": "module",
+  "author": {
+    "name": "Alaamer",
+    "email": "ahmedmuhmmed239@gmail.com",
+    "url": "https://github.com/alaamer12"
+  },
+  "homepage": "https://github.com/alaamer12/TeamUp",
+  "bugs": {
+    "url": "https://github.com/alaamer12/TeamUp/issues",
+    "email": "ahmedmuhmmed239@gmail.com"
+  },
   "scripts": {
     "dev": "vite",
     "dev:backend": "cd server && npm run dev",

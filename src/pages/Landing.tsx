@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff, Loader2} from "lucide-react";
+import { Users, Plus, Trash2, ArrowRight, HelpCircle, WifiOff, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import { saveTeamRequest } from "../utils/db";
@@ -23,6 +23,10 @@ import Footer from "@/components/Footer";
 const MAX_MEMBERS = 10;
 const MAX_PLANGUAGE = 3;
 const MAX_TECH_FIELDS = 3;
+const MAX_NAME_LENGTH = 50;
+const MAX_ABSTRACT_LENGTH = 500;
+const MIN_ABSTRACT_LENGTH = 20;
+const PHONE_REGEX = /^\d{11}$/; // Regex for exactly 11 digits
 
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
@@ -105,105 +109,216 @@ const HeroSection = ({ t, onScrollToForm, onNavigateToListings }) => (
 );
 
 // Personal Information Form Component
-const PersonalInfoForm = ({ formData, onInputChange, t }) => (
-  <div className="space-y-6">
-    <h3 className="text-xl font-semibold flex items-center">
-      <Users className="mr-2 w-5 h-5" />
-      {t('landing.your_info')}
-    </h3>
-    
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="form-field">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="phone">{t('landing.phone')}</Label>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <HelpCircle className="h-4 w-4 text-muted-foreground" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{t('landing.phone_tooltip')}</p>
-            </TooltipContent>
-          </Tooltip>
+const PersonalInfoForm = ({ formData, onInputChange, t }) => {
+  const [phoneError, setPhoneError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [abstractError, setAbstractError] = useState("");
+  
+  const validatePhone = (value) => {
+    if (!value) {
+      setPhoneError(t('validation.phone_required'));
+      return false;
+    }
+    if (!PHONE_REGEX.test(value)) {
+      setPhoneError(t('validation.phone_format'));
+      return false;
+    }
+    setPhoneError("");
+    return true;
+  };
+  
+  const validateName = (value) => {
+    if (!value.trim()) {
+      setNameError(t('validation.name_required'));
+      return false;
+    }
+    if (value.trim().length > MAX_NAME_LENGTH) {
+      setNameError(t('validation.name_too_long'));
+      return false;
+    }
+    setNameError("");
+    return true;
+  };
+  
+  const validateAbstract = (value) => {
+    if (!value.trim()) {
+      setAbstractError(t('validation.abstract_required'));
+      return false;
+    }
+    if (value.trim().length < MIN_ABSTRACT_LENGTH) {
+      setAbstractError(t('validation.abstract_too_short'));
+      return false;
+    }
+    if (value.trim().length > MAX_ABSTRACT_LENGTH) {
+      setAbstractError(t('validation.abstract_too_long'));
+      return false;
+    }
+    setAbstractError("");
+    return true;
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+    // Allow only digits
+    if (value === "" || /^\d+$/.test(value)) {
+      onInputChange("user_personal_phone", value);
+      if (value) validatePhone(value);
+    }
+  };
+  
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    onInputChange("user_name", value);
+    if (value) validateName(value);
+  };
+  
+  const handleAbstractChange = (e) => {
+    const value = e.target.value;
+    onInputChange("user_abstract", value);
+    if (value) validateAbstract(value);
+  };
+  
+  return (
+    <div className="space-y-6">
+      <h3 className="text-xl font-semibold flex items-center">
+        <Users className="mr-2 w-5 h-5" />
+        {t('landing.your_info')}
+      </h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-field">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="phone">{t('landing.phone')} *</Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('landing.phone_tooltip')}</p>
+                <p className="text-xs mt-1">{t('validation.phone_format_help')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="01155555555"
+            value={formData.user_personal_phone}
+            onChange={handlePhoneChange}
+            onBlur={() => validatePhone(formData.user_personal_phone)}
+            maxLength={11}
+            required
+            className={phoneError ? "border-red-500" : ""}
+          />
+          {phoneError && (
+            <div className="text-red-500 text-xs flex items-center mt-1">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              {phoneError}
+            </div>
+          )}
         </div>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="01155555555"
-          value={formData.user_personal_phone}
-          onChange={(e) => onInputChange("user_personal_phone", e.target.value)}
-          required
-        />
+        
+        <div className="form-field">
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="name">{t('landing.name')} *</Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t('landing.name_tooltip')}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <Input
+            id="name"
+            type="text"
+            placeholder="Your name"
+            value={formData.user_name}
+            onChange={handleNameChange}
+            onBlur={() => validateName(formData.user_name)}
+            maxLength={MAX_NAME_LENGTH}
+            required
+            className={nameError ? "border-red-500" : ""}
+          />
+          {nameError && (
+            <div className="text-red-500 text-xs flex items-center mt-1">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              {nameError}
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="form-field">
         <div className="flex items-center space-x-2">
-          <Label htmlFor="name">{t('landing.name')}</Label>
+          <Label htmlFor="gender">{t('landing.gender')} *</Label>
           <Tooltip>
             <TooltipTrigger asChild>
               <HelpCircle className="h-4 w-4 text-muted-foreground" />
             </TooltipTrigger>
             <TooltipContent>
-              <p>{t('landing.name_tooltip')}</p>
+              <p>{t('landing.gender_tooltip')}</p>
             </TooltipContent>
           </Tooltip>
         </div>
-        <Input
-          id="name"
-          type="text"
-          placeholder="Your name"
-          value={formData.user_name}
-          onChange={(e) => onInputChange("user_name", e.target.value)}
+        <Select value={formData.user_gender} onValueChange={(value) => onInputChange("user_gender", value)} required>
+          <SelectTrigger className={!formData.user_gender ? "border-red-500" : ""}>
+            <SelectValue placeholder="Select gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Male">{t('landing.gender_male')}</SelectItem>
+            <SelectItem value="Female">{t('landing.gender_female')}</SelectItem>
+            <SelectItem value="Other">{t('landing.gender_other')}</SelectItem>
+          </SelectContent>
+        </Select>
+        {!formData.user_gender && (
+          <div className="text-red-500 text-xs flex items-center mt-1">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            {t('validation.gender_required')}
+          </div>
+        )}
+      </div>
+      
+      <div className="form-field">
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="abstract">{t('landing.about')} *</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t('landing.about_tooltip')}</p>
+              <p className="text-xs mt-1">{MIN_ABSTRACT_LENGTH}-{MAX_ABSTRACT_LENGTH} {t('validation.characters')}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Textarea
+          id="abstract"
+          placeholder={t('landing.about_placeholder')}
+          value={formData.user_abstract}
+          onChange={handleAbstractChange}
+          onBlur={() => validateAbstract(formData.user_abstract)}
+          required
+          rows={4}
+          maxLength={MAX_ABSTRACT_LENGTH}
+          className={abstractError ? "border-red-500" : ""}
         />
+        <div className="flex justify-between mt-1">
+          {abstractError ? (
+            <div className="text-red-500 text-xs flex items-center">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              {abstractError}
+            </div>
+          ) : <div />}
+          <div className="text-xs text-muted-foreground">
+            {formData.user_abstract.length}/{MAX_ABSTRACT_LENGTH}
+          </div>
+        </div>
       </div>
     </div>
-    
-    <div className="form-field">
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="gender">{t('landing.gender')}</Label>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t('landing.gender_tooltip')}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <Select value={formData.user_gender} onValueChange={(value) => onInputChange("user_gender", value)}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select gender" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Male">{t('landing.gender_male')}</SelectItem>
-          <SelectItem value="Female">{t('landing.gender_female')}</SelectItem>
-          <SelectItem value="Other">{t('landing.gender_other')}</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    
-    <div className="form-field">
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="abstract">{t('landing.about')}</Label>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t('landing.about_tooltip')}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <Textarea
-        id="abstract"
-        placeholder={t('landing.about_placeholder')}
-        value={formData.user_abstract}
-        onChange={(e) => onInputChange("user_abstract", e.target.value)}
-        required
-        rows={4}
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 // Tech Fields Selection Component
 const TechFieldsSelection = ({ member, index, onMemberChange, t }) => (
@@ -602,24 +717,63 @@ const Landing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.user_personal_phone || !formData.user_abstract) {
+    // Enhanced validation
+    const errors = [];
+    
+    // Validate personal info
+    if (!formData.user_personal_phone) {
+      errors.push(t('validation.phone_required'));
+    } else if (!PHONE_REGEX.test(formData.user_personal_phone)) {
+      errors.push(t('validation.phone_format'));
+    }
+    
+    if (!formData.user_name?.trim()) {
+      errors.push(t('validation.name_required'));
+    }
+    
+    if (!formData.user_gender) {
+      errors.push(t('validation.gender_required'));
+    }
+    
+    if (!formData.user_abstract?.trim()) {
+      errors.push(t('validation.abstract_required'));
+    } else if (formData.user_abstract.trim().length < MIN_ABSTRACT_LENGTH) {
+      errors.push(t('validation.abstract_too_short'));
+    }
+
+    // Validate member requirements
+    const memberErrors = [];
+    formData.members.forEach((member, index) => {
+      if (!member.tech_field.length) {
+        memberErrors.push(`${t('landing.team_member')} ${index + 1}: ${t('validation.tech_field_required')}`);
+      }
+      
+      if (!member.planguage.length) {
+        memberErrors.push(`${t('landing.team_member')} ${index + 1}: ${t('validation.planguage_required')}`);
+      }
+      
+      if (!member.major) {
+        memberErrors.push(`${t('landing.team_member')} ${index + 1}: ${t('validation.major_required')}`);
+      }
+    });
+    
+    if (errors.length > 0 || memberErrors.length > 0) {
+      const allErrors = [...errors, ...memberErrors];
       toast({
-        title: "Validation Error",
-        description: "Please fill in required fields (phone and abstract)",
+        title: t('validation.form_errors'),
+        description: (
+          <ul className="list-disc pl-4 space-y-1">
+            {allErrors.slice(0, 3).map((error, i) => (
+              <li key={i}>{error}</li>
+            ))}
+            {allErrors.length > 3 && (
+              <li>{t('validation.and_more_errors')}</li>
+            )}
+          </ul>
+        ),
         variant: "destructive"
       });
       return;
-    }
-
-    for (const member of formData.members) {
-      if (!member.tech_field.length || !member.major) {
-        toast({
-          title: "Validation Error", 
-          description: "Please complete all member requirements",
-          variant: "destructive"
-        });
-        return;
-      }
     }
 
     setIsSubmitting(true);

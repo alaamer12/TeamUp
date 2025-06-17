@@ -499,6 +499,32 @@ export const translations = {
     ar: "تواصل مباشرة عبر واتساب - بدون منصات وسيطة أو تتبع للرسائل."
   },
   
+  // Footer
+  "footer.motto": {
+    en: "Connecting Talent, Building Futures.",
+    ar: "نصل المواهب، نبني المستقبل."
+  },
+  "footer.crafted_by": {
+    en: "Crafted with ❤️ by",
+    ar: "صنع بـ ❤️ بواسطة"
+  },
+  "footer.source_code": {
+    en: "Source Code",
+    ar: "الكود المصدري"
+  },
+  "footer.docs": {
+    en: "Docs",
+    ar: "المستندات"
+  },
+  "footer.contact": {
+    en: "Contact",
+    ar: "التواصل"
+  },
+  "footer.all_rights_reserved": {
+    en: "All rights reserved.",
+    ar: "جميع الحقوق محفوظة."
+  },
+  
   // Common
   "common.language": {
     en: "Language",

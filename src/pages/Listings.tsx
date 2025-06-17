@@ -11,6 +11,7 @@ import { getTeamRequests, subscribeToListingsUpdates } from "../utils/db";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLanguage } from "../components/LanguageProvider";
+import Footer from "@/components/Footer";
 
 const ITEMS_PER_PAGE = 6;
 const MAJORS = ["CS", "IS", "SC", "AI"];
@@ -422,6 +423,7 @@ const Listings = () => {
             </div>
           </section>
         </div>
+        <Footer />
       </TooltipProvider>
     </div>
   );

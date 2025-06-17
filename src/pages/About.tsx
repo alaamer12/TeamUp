@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Shield, Zap, Code, Database, Smartphone, Palette, Server } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useLanguage } from "../components/LanguageProvider";
+import Footer from "@/components/Footer";
 
 const About = () => {
   const { t } = useLanguage();
@@ -191,6 +192,7 @@ const About = () => {
           </motion.div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };

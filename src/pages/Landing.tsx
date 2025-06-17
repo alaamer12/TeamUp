@@ -17,6 +17,7 @@ import { getCurrentOwnership } from "../utils/fingerprint-safe";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLanguage } from "../components/LanguageProvider";
+import Footer from "@/components/Footer";
 
 const techFields = [
   "Frontend Development", "Backend Development", "Full Stack", "Mobile Development",
@@ -712,6 +713,7 @@ const Landing = () => {
             </motion.div>
           </div>
         </section>
+        <Footer />
       </div>
     </TooltipProvider>
   );

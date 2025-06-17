@@ -13,6 +13,9 @@ import AdminModal from "./components/AdminModal";
 import { useKeyboardShortcut } from "./hooks/useKeyboardShortcut";
 import { MaintenanceModeProvider, useMaintenanceMode } from "./hooks/useMaintenanceMode";
 import MaintenanceMode from "./components/MaintenanceMode";
+import { AnnouncementProvider } from "./hooks/useAnnouncement";
+import AnnouncementToast from "./components/AnnouncementToast";
+import DevTools from "./components/DevTools";
 import "./styles/globals.css";
 
 const queryClient = new QueryClient();
@@ -52,7 +55,11 @@ const AppContent = () => {
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AnnouncementToast />
       <AdminModal isOpen={adminModalOpen} onClose={() => setAdminModalOpen(false)} />
+      
+      {/* Development tools - only shown in dev mode */}
+      <DevTools />
       
       {/* Show maintenance mode overlay if enabled */}
       {isMaintenanceMode && (
@@ -78,7 +85,9 @@ const App = () => (
     <ThemeProvider defaultTheme="light" storageKey="team-formation-theme">
       <AdminProvider>
         <MaintenanceModeProvider>
-          <AppContent />
+          <AnnouncementProvider>
+            <AppContent />
+          </AnnouncementProvider>
         </MaintenanceModeProvider>
       </AdminProvider>
     </ThemeProvider>

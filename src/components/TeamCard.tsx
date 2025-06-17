@@ -120,15 +120,17 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
       return null;
     }
   };
+
   return (
     <TooltipProvider>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="team-card"
+        className="team-card relative"
+        style={{ zIndex: 1 }}
       >
-        <Card className="h-full w-full overflow-hidden border border-muted/60 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-primary/30 transition-all duration-200">
+        <Card className="h-full w-full border border-muted/60 shadow-sm hover:shadow-md hover:scale-[1.01] hover:border-primary/30 transition-all duration-200 relative overflow-visible">
           {/* Card Header with User Info */}
           <CardHeader className="pb-2 bg-gradient-to-r from-background to-background/80">
             <div className="flex items-start gap-4">
@@ -144,32 +146,36 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                 )}
                 
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        <span>{formatDate(team)}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('teamcard.created')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  {team.expiresAt && getDaysLeft(team.expiresAt) !== null && (
+                  <div className="relative z-50">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          <span className={getDaysLeft(team.expiresAt)! < 3 ? "text-amber-500 font-medium" : ""}>
-                            {getDaysLeft(team.expiresAt)} {t('teamcard.days_left_text')}
-                          </span>
+                          <Calendar className="w-4 h-4 mr-1" />
+                          <span>{formatDate(team)}</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('teamcard.days_left')}</p>
+                      <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                        <p>{t('teamcard.created')}</p>
                       </TooltipContent>
                     </Tooltip>
+                  </div>
+                  
+                  {team.expiresAt && getDaysLeft(team.expiresAt) !== null && (
+                    <div className="relative z-50">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center">
+                            <Clock className="w-4 h-4 mr-1" />
+                            <span className={getDaysLeft(team.expiresAt)! < 3 ? "text-amber-500 font-medium" : ""}>
+                              {getDaysLeft(team.expiresAt)} {t('teamcard.days_left_text')}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                          <p>{t('teamcard.days_left')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   )}
                 </div>
               </div>
@@ -191,14 +197,16 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                   <Users className="w-4 h-4 mr-2" />
                   {t('landing.looking_for_members')} {team.members.length} {team.members.length !== 1 ? t('landing.team_members') : t('teamcard.member')}
                 </h4>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <HelpCircle className="h-4 w-4 ml-2 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('teamcard.looking_for')}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <div className="relative z-50">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-4 w-4 ml-2 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                      <p>{t('teamcard.looking_for')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
               
               <div className="space-y-4">
@@ -215,28 +223,32 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                       
                       <div className="flex items-center gap-2">
                         {member.gender !== "Any" && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs">
-                                {member.gender}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{t('teamcard.gender_preference')}</p>
-                            </TooltipContent>
-                          </Tooltip>
+                          <div className="relative z-50">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs">
+                                  {member.gender}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                                <p>{t('teamcard.gender_preference')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         )}
                         {member.already_know && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge variant="secondary" className="text-xs">
-                                {t('teamcard.known_person')}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{t('teamcard.known_person_tooltip')}</p>
-                            </TooltipContent>
-                          </Tooltip>
+                          <div className="relative z-50">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="secondary" className="text-xs">
+                                  {t('teamcard.known_person')}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                                <p>{t('teamcard.known_person_tooltip')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -256,17 +268,19 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
                       
                       {/* Right column */}
                       <div>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="text-xs font-medium mb-1 flex items-center">
-                              <span className="text-muted-foreground mr-1">{t('teamcard.major')}</span>
-                              <span>{member.major}</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{t('teamcard.major_tooltip')}</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <div className="relative z-50">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="text-xs font-medium mb-1 flex items-center">
+                                <span className="text-muted-foreground mr-1">{t('teamcard.major')}</span>
+                                <span>{member.major}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                              <p>{t('teamcard.major_tooltip')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         
                         {member.planguage?.length > 0 && (
                           <div>
@@ -296,48 +310,54 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, onUpdate }) => {
               )}
               
               <div className="flex flex-1 gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      onClick={handleWhatsAppContact}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      {t('teamcard.contact_whatsapp')}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('teamcard.contact_tooltip')}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <div className="relative z-50 flex-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={handleWhatsAppContact}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        {t('teamcard.contact_whatsapp')}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                      <p>{t('teamcard.contact_tooltip')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
 
                 {canModify && (
                   <div className="flex space-x-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={handleEdit}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('teamcard.edit')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
-                    <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                    <div className="relative z-50">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
+                          <Button variant="outline" size="sm" onClick={handleEdit}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{t('teamcard.delete')}</p>
+                        <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                          <p>{t('teamcard.edit')}</p>
                         </TooltipContent>
                       </Tooltip>
-                      <DialogContent>
+                    </div>
+                    
+                    <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                      <div className="relative z-50">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent className="z-[9999]" side="top" sideOffset={5}>
+                            <p>{t('teamcard.delete')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <DialogContent className="z-[9999]">
                         <DialogHeader>
                           <DialogTitle>{isAdmin ? "Admin: Delete Team Request" : t('teamcard.delete_title')}</DialogTitle>
                           <DialogDescription>
